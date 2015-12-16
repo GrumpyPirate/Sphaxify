@@ -1,0 +1,6 @@
+*
+!.gitignore
+!Gulpfile.js
+!package.json
+!Source/pack.png
+!Source/pack.mcmeta
