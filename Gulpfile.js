@@ -80,10 +80,17 @@ gulp.task('optimise', function() {
             .pipe(filterPNG)
                 // Do the following to ONLY resizeables
                 .pipe(filterResizeables)
-                    .pipe($.imageResize({
-                        width: pctScale,
-                        height: pctScale,
-                        filter: 'Triangle' // equivalent to Bilinear
+                    // Use gulp-gm to resize and apply threshold (remove transparency) to images
+                    .pipe($.gm(function (imageFile) {
+                        return imageFile
+                            // Ensure 8-bit RGB
+                            .bitdepth(8)
+                            // Bilinear
+                            .filter('Triangle')
+                            // Resize to % scale
+                            .resize(pctScale, '%')
+                            // Ensure no transparent edges
+                            .operator('Opacity', 'Threshold', 50, '%');
                     }))
                 .pipe(filterResizeables.restore)
                 // pass all images through gulp-imagemin
@@ -104,7 +111,7 @@ gulp.task('optimise', function() {
 
 // default task
 // -----------------------------------------------------------------------------
-gulp.task('default', ['optimise'], function () {
+gulp.task('default', function () {
     console.log('\nWatching for changes:\n');
     // Watch Images
     // -------------------------------------------------------------------------
