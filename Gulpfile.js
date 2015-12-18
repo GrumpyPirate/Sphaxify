@@ -30,7 +30,11 @@ settings = {
 // -----------------------------------------------------------------------------
 watchedPatterns = {
 	img: paths.img.src + '**/*.png'
-};
+}
+
+// Patch name!
+// -----------------------------------------------------------------
+patchName = 'NoPatchName';
 
 /* -----------------------------------------------------------------------------
  * GULP PLUGINS
@@ -51,15 +55,9 @@ var gulp = require('gulp'),
  * Task - optimise
  * -------------------------------------------------------------------------- */
 gulp.task('optimise', function() {
-	var initialSize = 512, // Define original base texture size
-		suff = 'x', // suffix to add onto created size pack directories
-		fileStream = gulp.src(paths.img.src + '**', // source everything
-			{ base: paths.img.src }
-		);
-
-	function resizeStream (stream, size) {
 		var pctScale = (size / initialSize * 100).toString() + '%',
-			customDirname = size.toString() + suff + '/',
+			customDirname = size.toString() + suff,
+			zipName = '[' + customDirname + '] Sphax Patch - ' + patchName + '.zip',
 			ignoreStuff = $.ignore('**/*.{psb,psd}'),
 			filterPNG = $.filter(['**/*.png'], { restore: true }),
 			filterResizeables = $.filter([
@@ -79,7 +77,7 @@ gulp.task('optimise', function() {
 				// { dirname: 'Example Project 2',
 				//   basename: 'test1',
 				//   extname: '.png' }
-				path.dirname = customDirname + path.dirname;
+				path.dirname = customDirname + '/' + path.dirname;
 			}))
 			.pipe($.newer(paths.img.dest))
 			// Cache everything past this point, name the cache using dirname
@@ -112,17 +110,11 @@ gulp.task('optimise', function() {
 				.pipe($.imagemin(settings.imagemin))
 			// Restore non-PNG files to stream
 			.pipe(filterPNG.restore)
+			.pipe(gulp.dest(paths.img.dest))
+			// zip everything up
+			.pipe($.zip(zipName))
 			.pipe(gulp.dest(paths.img.dest));
-	} // /function resizeStream
-
-	return $.mergeStream(
-		resizeStream(fileStream, 512),
-		resizeStream(fileStream, 256),
-		resizeStream(fileStream, 128),
-		resizeStream(fileStream, 64),
-		resizeStream(fileStream, 32)
-	);
-});
+	});
 
 // default task
 // -----------------------------------------------------------------------------
