@@ -80,7 +80,7 @@ gulp.task('optimise', function() {
             .pipe(filterPNG)
                 // Do the following to ONLY resizeables
                 .pipe(filterResizeables)
-                    // Use gulp-gm to resize and apply threshold (remove transparency) to images
+                    // Use gulp-gm to resize images
                     .pipe($.gm(function (imageFile) {
                         return imageFile
                             // Ensure 8-bit RGB
@@ -88,11 +88,15 @@ gulp.task('optimise', function() {
                             // Bilinear
                             .filter('Triangle')
                             // Resize to % scale
-                            .resize(pctScale, '%')
-                            // Ensure no transparent edges
-                            .operator('Opacity', 'Threshold', 50, '%');
+                            .resize(pctScale, '%');
                     }))
                 .pipe(filterResizeables.restore)
+                // Use gulp-gm to  apply threshold to (remove partial transparency from) images
+                .pipe($.gm(function (imageFile) {
+                    return imageFile
+                        // Ensure no transparent edges on all PNGs
+                        .operator('Opacity', 'Threshold', 50, '%');
+                }))
                 // pass all images through gulp-imagemin
                 .pipe($.imagemin(settings.imagemin))
             // Restore non-PNG files to stream
