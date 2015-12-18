@@ -62,7 +62,10 @@ gulp.task('optimise', function() {
             customDirname = size.toString() + suff + '/',
             ignoreStuff = $.ignore('**/*.{psb,psd}'),
             filterPNG = $.filter(['**/*.png'], { restore: true }),
-            filterResizeables = $.filter(['**/*.png', '!**/{gui,guis,font,fonts}/**/*.png', '!**/pack.png'], { restore: true });
+            filterResizeables = $.filter(['**/*.png', '!**/{gui,guis,font,fonts}/**/*.png', '!**/pack.png'], { restore: true }),
+            // If there are images that need their transparency preserved, define them here, e.g.:
+            // filterThresholdable = $.filter(['**/*.png', '!**/items/icons/**/*.png'], { restore: true });
+            filterThresholdable = $.filter(['**/*.png'], { restore: true });
 
         return stream
             .pipe(ignoreStuff)
@@ -92,11 +95,14 @@ gulp.task('optimise', function() {
                     }))
                 .pipe(filterResizeables.restore)
                 // Use gulp-gm to  apply threshold to (remove partial transparency from) images
-                .pipe($.gm(function (imageFile) {
-                    return imageFile
-                        // Ensure no transparent edges on all PNGs
-                        .operator('Opacity', 'Threshold', 50, '%');
-                }))
+                // Apply only to images we want to remove transparency from
+                .pipe(filterThresholdable)
+                    .pipe($.gm(function (imageFile) {
+                        return imageFile
+                            // Ensure no transparent edges on all PNGs
+                            .operator('Opacity', 'Threshold', 50, '%');
+                    }))
+                .pipe(filterThresholdable.restore)
                 // pass all images through gulp-imagemin
                 .pipe($.imagemin(settings.imagemin))
             // Restore non-PNG files to stream
