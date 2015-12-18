@@ -58,7 +58,7 @@ gulp.task('optimise', function() {
 		var pctScale = (size / initialSize * 100).toString() + '%',
 			customDirname = size.toString() + suff,
 			zipName = '[' + customDirname + '] Sphax Patch - ' + patchName + '.zip',
-			ignoreStuff = $.ignore('**/*.{psb,psd}'),
+			ignoreStuff = $.ignore('**/*.{psb,psd,DS_Store}'),
 			filterPNG = $.filter(['**/*.png'], { restore: true }),
 			filterResizeables = $.filter([
 				'**/*.png',
