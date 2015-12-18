@@ -62,7 +62,7 @@ gulp.task('optimise', function() {
             customDirname = size.toString() + suff + '/',
             ignoreStuff = $.ignore('**/*.{psb,psd}'),
             filterPNG = $.filter(['**/*.png'], { restore: true }),
-            filterResizeables = $.filter(['**/*.png', '!**/{gui,font}/**/*.png', '!**/pack.png'], { restore: true });
+            filterResizeables = $.filter(['**/*.png', '!**/{gui,guis,font,fonts}/**/*.png', '!**/pack.png'], { restore: true });
 
         return stream
             .pipe(ignoreStuff)
