@@ -1,40 +1,50 @@
 /* -----------------------------------------------------------------------------
  * VARS
  * -------------------------------------------------------------------------- */
-
-// Project base paths
-// -----------------------------------------------------------------------------
-var basePaths = {
-	src:  'Source/',
-	dest: 'Compiled Size Packs/'
-},
-
 // Paths for file assets
 // -----------------------------------------------------------------------------
-paths = {
-	img: {
-		src:  basePaths.src,
-		dest: basePaths.dest
-	}
-},
-// custom plugin settings
-// -----------------------------------------------------------------------------
-settings = {
-	imagemin: {
-		// Default is 3 (16 trials)
-		optimizationLevel: 3
-	}
-},
+var paths = {
+		src:  'Source/',
+		dest: 'Compiled Size Packs/'
+	},
+	// custom plugin settings
+	// -----------------------------------------------------------------------------
+	settings = {
+		imagemin: {
+			// Default is 3 (16 trials)
+			optimizationLevel: 3
+		},
+		cached: {
+			// Use md5 instead of storing the whole file contents, saves RAM
+			optimizeMemory: true
+		}
+	},
+	// watched filename patterns
+	// -----------------------------------------------------------------------------
+	watchedPatterns = {
+		img: paths.src + '**/*.png'
+	},
+	// Patch name
+	patchName = 'NoPatchName',
+	// Define versions to process
+	versions = ['1.6.4', '1.7.10'],
+	// Suffix to add onto created size pack directories
+	suff = 'x',
+	// Initial size of source images (should be 512px)
+	initialSize = 512,
+	// Downsize the original pack this many times
+	resizeLevels = 5,
+	// Pre-populate a list of sizes
+	sizes = (function () {
+		var a = [];
 
-// watched filename patterns
-// -----------------------------------------------------------------------------
-watchedPatterns = {
-	img: paths.img.src + '**/*.png'
-},
+		for (var l = 0; l < resizeLevels; l++) {
+			var size = initialSize / Math.pow(2, l);
+			a.push(size)
+		} // /for ... resizeLevels
 
-// Patch name!
-// -----------------------------------------------------------------
-patchName = 'NoPatchName';
+		return a;
+	})();
 
 /* -----------------------------------------------------------------------------
  * GULP PLUGINS
@@ -43,8 +53,7 @@ var gulp = require('gulp'),
 	$ = require('gulp-load-plugins')({
 		pattern: '*',
 		camelize: true
-	}),
-	path = require('path');
+	});
 
 /* -----------------------------------------------------------------------------
  * Global Functions
@@ -53,27 +62,63 @@ var gulp = require('gulp'),
  * TASKS
  * -------------------------------------------------------------------------- */
 /* -----------------------------------------------------------------------------
+ * Task - clearCache
+ * -------------------------------------------------------------------------- */
+gulp.task('clearCache', function () {
+	return $.cached.caches = {};
+}); // /gulp.task('clearCache'...
+
+/* -----------------------------------------------------------------------------
+ * Task - makeZips
+ * -------------------------------------------------------------------------- */
+gulp.task('makeZips', ['optimise'], function () {
+	var mergedStream = new $.mergeStream();
+
+	// Intended zip name:
+	// [version] [size] Sphax Patch - patchName.zip
+	// i.e.: [1.6.4] [32x] Sphax Patch - NoPatchName.zip
+
+	// For each version (1.6.4, 1.7.10, etc.)
+	for (var v = 0; v < versions.length; v++) {
+		// For each size
+		for (var s = 0; s < sizes.length; s++) {
+			var packName = sizes[s] + suff,
+				zipName = '[' + versions[v] + '] [' + sizes[s] + 'x] Sphax Patch - ' + patchName + '.zip',
+				targetDir = paths.dest + versions[v] + '/' + packName + '/';
+
+			mergedStream.add(
+				gulp.src(targetDir + '**', { base: targetDir })
+					// zip everything up
+					.pipe($.zip(zipName))
+					.pipe(gulp.dest(paths.dest))
+					// Log when zip has been written
+					.on('end', function () {
+						$.util.log($.util.colors.magenta('Created zip:'), $.util.colors.green(zipName));
+					})
+			);
+		} // /for ... sizes
+	} // for ... versions
+
+	return mergedStream;
+}); // /gulp.task('makeZips'...
+
+/* -----------------------------------------------------------------------------
  * Task - optimise
  * -------------------------------------------------------------------------- */
-gulp.task('optimise', function() {
-	var initialSize = 512,
-		resizeLevels = 5, // Downsize the original pack this many times
-		versions = ['1.6.4', '1.7.10'], // define versions to process
-		suff = 'x', // suffix to add onto created size pack directories
-		mergedStream = new $.mergeStream();
+gulp.task('optimise', function () {
+	var mergedStream = new $.mergeStream();
 
 	function resizeStream (version, size) {
-		var pctScale = size.toString() + '%', // 50%
-			relativeSize = initialSize * size / 100, // 256
-			packName = relativeSize + suff, // 256x
+		var pctScale = size / initialSize * 100 + '%', // 50%
+			packName = size + suff, // 256x
 			customDirname = version + '/' + packName, // 1.7.10/256x
-			zipName = '[' + version + '] [' + packName + '] Sphax Patch - ' + patchName + '.zip',
 			ignoreStuff = $.ignore('**/*.{psb,psd,DS_Store,db}'),
 			// Optimise these files:
 			filterPNG = $.filter(['**/*.png'], { restore: true }),
 			// Resize these files:
 			filterResizeables = $.filter([
 				'**/*.png',
+				// By default, don't resize GUIs or fonts
 				'!**/{gui,guis,font,fonts}/**/*.png',
 				'!**/pack.png'
 			], { restore: true }),
@@ -82,16 +127,13 @@ gulp.task('optimise', function() {
 				'**/*.png'
 			], { restore: true });
 
-		// Log process
-		console.log('\n', );
-
-		return fileStream = gulp.src(paths.img.src + version + '/**', // source everything
-				{ base: paths.img.src + version + '/' }
-			)
+		return fileStream = gulp.src(paths.src + version + '/**',
+				{ base: paths.src + version + '/' }
+			) // source everything
+			// Only pass through files newer than dest files
+			.pipe($.newer(paths.dest + version + '/' + packName + '/'))
+			// Filter out crap
 			.pipe(ignoreStuff)
-			.pipe($.newer(paths.img.dest))
-			// Cache everything past this point, name the cache using dirname
-			.pipe($.cached(relativeSize.toString()))
 			// Do the following steps to PNGs only( i.e. no .txt, .mcmeta files)
 			.pipe(filterPNG)
 				// Do the following to ONLY resizeables
@@ -124,35 +166,24 @@ gulp.task('optimise', function() {
 				// { dirname: 'Example Project 2',
 				//   basename: 'test1',
 				//   extname: '.png' }
-				// console.log(thisPath.dirname);
 				thisPath.dirname = customDirname + '/' + thisPath.dirname;
 			}))
-			.pipe(gulp.dest(paths.img.dest))
-			// zip everything up
-			.pipe($.rename(function (thisPath) {
-				// Remove version + packName from current path
-				// The goal is to store only assets/** folder inside zip
-				var i = thisPath.dirname.indexOf(packName),
-					// zipPath = path.join(paths.img.dest, thisPath.dirname.slice(i + packName.length));
-					zipPath = thisPath.dirname.slice(i + packName.length);
-				thisPath.dirname = zipPath;
-			}))
-			.pipe($.zip(zipName))
-			.pipe(gulp.dest(paths.img.dest));
+			.pipe(gulp.dest(paths.dest))
+			// Log when basic pack has been written
+			.on('end', function () {
+				$.util.log($.util.colors.magenta('Finished creating pack:'), $.util.colors.cyan(customDirname));
+			});
 	} // /function resizeStream
 
 	// For each version (1.6.4, 1.7.10, etc.)
 	for (var v = 0; v < versions.length; v++) {
 		// For each resiseLevel
-		for (var l = 0; l < resizeLevels; l++) {
-			// Get percentage scale of resizeLevel from initialSize
-			var size = 100 / Math.pow(2, l);
-
+		for (var s = 0; s < sizes.length; s++) {
 			// Push a file stream to mergedStream
 			mergedStream.add(
-				resizeStream(versions[v], size)
+				resizeStream(versions[v], sizes[s])
 			);
-		} // /for ... resizeLevels
+		} // /for ... sizes
 	} // /for ... versions
 
 	// Return merged streams to allow task to resolve
@@ -161,12 +192,15 @@ gulp.task('optimise', function() {
 
 // default task
 // -----------------------------------------------------------------------------
-gulp.task('default', function () {
-	console.log('\nWatching for changes:\n');
+gulp.task('default', ['makeZips'], function () {
+	$.util.log(
+		'\n\n',
+		$.util.colors.cyan('Watching for changes:\n'),
+		'\t',
+		$.util.colors.green('IMG Files:'), watchedPatterns.img,
+		'\n'
+	);
 	// Watch Images
 	// -------------------------------------------------------------------------
-	console.log('- IMG Files: ' + watchedPatterns.img);
-	gulp.watch(watchedPatterns.img, ['optimise']);
-
-	console.log('\n');
+	gulp.watch(watchedPatterns.img, ['makeZips']);
 }); // /default
