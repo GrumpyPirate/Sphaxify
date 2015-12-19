@@ -2,9 +2,9 @@ Assets/
 Previews/
 Original/
 node_modules/
-Compiled\ Size\ Packs/
 
 !Source/**
+!Compiled\ Size\ Packs/**
 
 .DS_Store
 *.zip
