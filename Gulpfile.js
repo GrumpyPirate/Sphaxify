@@ -43,7 +43,8 @@ var gulp = require('gulp'),
 	$ = require('gulp-load-plugins')({
 		pattern: '*',
 		camelize: true
-	});
+	}),
+	path = require('path');
 
 /* -----------------------------------------------------------------------------
  * Global Functions
@@ -57,17 +58,16 @@ var gulp = require('gulp'),
 gulp.task('optimise', function() {
 	var initialSize = 512,
 		resizeLevels = 5, // Downsize the original pack this many times
+		versions = ['1.6.4', '1.7.10'], // define versions to process
 		suff = 'x', // suffix to add onto created size pack directories
-		fileStream = gulp.src(paths.img.src + '**', // source everything
-			{ base: paths.img.src }
-		),
 		mergedStream = new $.mergeStream();
 
-	function resizeStream (size) {
-		var pctScale = size.toString() + '%',
-			relativeSize = initialSize * size / 100,
-			customDirname = path.join(relativeSize + suff),
-			zipName = '[' + customDirname + '] Sphax Patch - ' + patchName + '.zip',
+	function resizeStream (version, size) {
+		var pctScale = size.toString() + '%', // 50%
+			relativeSize = initialSize * size / 100, // 256
+			packName = relativeSize + suff, // 256x
+			customDirname = version + '/' + packName, // 1.7.10/256x
+			zipName = '[' + version + '] [' + packName + '] Sphax Patch - ' + patchName + '.zip',
 			ignoreStuff = $.ignore('**/*.{psb,psd,DS_Store,db}'),
 			// Optimise these files:
 			filterPNG = $.filter(['**/*.png'], { restore: true }),
@@ -82,8 +82,12 @@ gulp.task('optimise', function() {
 				'**/*.png'
 			], { restore: true });
 
-		return fileStream
-			.pipe($.clone())
+		// Log process
+		console.log('\n', );
+
+		return fileStream = gulp.src(paths.img.src + version + '/**', // source everything
+				{ base: paths.img.src + version + '/' }
+			)
 			.pipe(ignoreStuff)
 			.pipe($.newer(paths.img.dest))
 			// Cache everything past this point, name the cache using dirname
@@ -120,24 +124,38 @@ gulp.task('optimise', function() {
 				// { dirname: 'Example Project 2',
 				//   basename: 'test1',
 				//   extname: '.png' }
-				console.log(thisPath.dirname);
+				// console.log(thisPath.dirname);
 				thisPath.dirname = customDirname + '/' + thisPath.dirname;
 			}))
 			.pipe(gulp.dest(paths.img.dest))
 			// zip everything up
+			.pipe($.rename(function (thisPath) {
+				// Remove version + packName from current path
+				// The goal is to store only assets/** folder inside zip
+				var i = thisPath.dirname.indexOf(packName),
+					// zipPath = path.join(paths.img.dest, thisPath.dirname.slice(i + packName.length));
+					zipPath = thisPath.dirname.slice(i + packName.length);
+				thisPath.dirname = zipPath;
+			}))
 			.pipe($.zip(zipName))
 			.pipe(gulp.dest(paths.img.dest));
 	} // /function resizeStream
 
+	// For each version (1.6.4, 1.7.10, etc.)
+	for (var v = 0; v < versions.length; v++) {
+		// For each resiseLevel
+		for (var l = 0; l < resizeLevels; l++) {
+			// Get percentage scale of resizeLevel from initialSize
+			var size = 100 / Math.pow(2, l);
 
-	for (var i = 0; i < resizeLevels; i++) {
-		var size = 100 / Math.pow(2, i);
+			// Push a file stream to mergedStream
+			mergedStream.add(
+				resizeStream(versions[v], size)
+			);
+		} // /for ... resizeLevels
+	} // /for ... versions
 
-		mergedStream.add(
-			resizeStream(size)
-		);
-	}
-
+	// Return merged streams to allow task to resolve
 	return mergedStream;
 });
 
