@@ -1,5 +1,10 @@
-.gitignore
+Assets/
+Previews/
+Original/
+node_modules/
+Compiled\ Size\ Packs/
+
+!Source/**
+
 .DS_Store
 *.zip
-Assets
-node_modules/
