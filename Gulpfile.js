@@ -18,7 +18,7 @@ var paths = {
 	// watched filename patterns
 	// -----------------------------------------------------------------------------
 	watchedPatterns = {
-		img: paths.src + '**/*.png'
+		img: paths.src + '**/*.{png,mcmeta,txt}'
 	},
 	// Patch name
 	patchName = 'NoPatchName',
@@ -28,7 +28,8 @@ var paths = {
 	suff = 'x',
 	// Initial size of source images (should be 512px)
 	initialSize = 512,
-	// Downsize the original pack this many times
+	// Downsize the original pack this many times (inclusive), e.g.:
+	// 512, 256, 128, 64, 32
 	resizeLevels = 5,
 	// Pre-populate a list of sizes
 	sizes = (function () {
@@ -63,27 +64,31 @@ var gulp = require('gulp'),
 gulp.task('makeZips', ['optimise'], function () {
 	var mergedStream = new $.mergeStream();
 
-	// Intended zip name:
-	// [version] [size] Sphax Patch - patchName.zip
-	// i.e.: [1.6.4] [32x] Sphax Patch - NoPatchName.zip
+	function zipStream (version, size) {
+		// Intended zip name:
+		// [version] [size] Sphax Patch - patchName.zip
+		// i.e.: [1.6.4] [32x] Sphax Patch - NoPatchName.zip
+		// ---------------------------------------------------------------------
+		var packName = size + suff,
+			zipName = '[' + version + '] [' + size + 'x] Sphax Patch - ' + patchName + '.zip',
+			targetDir = paths.dest + version + '/' + packName + '/';
+
+		return gulp.src(targetDir + '**', { base: targetDir })
+			// zip everything up
+			.pipe($.zip(zipName))
+			.pipe(gulp.dest(paths.dest))
+			// Log when zip has been written
+			.on('end', function () {
+				$.util.log($.util.colors.magenta('Created zip:'), $.util.colors.green(zipName));
+			});
+	} // /function zipStream
 
 	// For each version (1.6.4, 1.7.10, etc.)
 	for (var v = 0; v < versions.length; v++) {
 		// For each size
 		for (var s = 0; s < sizes.length; s++) {
-			var packName = sizes[s] + suff,
-				zipName = '[' + versions[v] + '] [' + sizes[s] + 'x] Sphax Patch - ' + patchName + '.zip',
-				targetDir = paths.dest + versions[v] + '/' + packName + '/';
-
 			mergedStream.add(
-				gulp.src(targetDir + '**', { base: targetDir })
-					// zip everything up
-					.pipe($.zip(zipName))
-					.pipe(gulp.dest(paths.dest))
-					// Log when zip has been written
-					.on('end', function () {
-						$.util.log($.util.colors.magenta('Created zip:'), $.util.colors.green(zipName));
-					})
+				zipStream(versions[v], sizes[s])
 			);
 		} // /for ... sizes
 	} // for ... versions
