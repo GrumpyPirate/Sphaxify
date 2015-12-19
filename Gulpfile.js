@@ -13,10 +13,6 @@ var paths = {
 		imagemin: {
 			// Default is 3 (16 trials)
 			optimizationLevel: 3
-		},
-		cached: {
-			// Use md5 instead of storing the whole file contents, saves RAM
-			optimizeMemory: true
 		}
 	},
 	// watched filename patterns
@@ -61,13 +57,6 @@ var gulp = require('gulp'),
 /* -----------------------------------------------------------------------------
  * TASKS
  * -------------------------------------------------------------------------- */
-/* -----------------------------------------------------------------------------
- * Task - clearCache
- * -------------------------------------------------------------------------- */
-gulp.task('clearCache', function () {
-	return $.cached.caches = {};
-}); // /gulp.task('clearCache'...
-
 /* -----------------------------------------------------------------------------
  * Task - makeZips
  * -------------------------------------------------------------------------- */
