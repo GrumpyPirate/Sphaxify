@@ -112,8 +112,8 @@ gulp.task('optimise', function () {
 			// Resize these files:
 			filterResizeables = $.filter([
 				'**/*.png',
-				// By default, don't resize GUIs or fonts
-				'!**/{gui,guis,font,fonts}/**/*.png',
+				// By default, don't resize GUIs
+				'!**/{gui,guis}/**/*.png',
 				'!**/pack.png'
 			], { restore: true }),
 			// Apply threshold filter to these files:
