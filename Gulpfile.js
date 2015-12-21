@@ -37,7 +37,7 @@ var paths = {
 
 		for (var l = 0; l < resizeLevels; l++) {
 			var size = initialSize / Math.pow(2, l);
-			a.push(size)
+			a.push(size);
 		} // /for ... resizeLevels
 
 		return a;
@@ -121,7 +121,7 @@ gulp.task('optimise', function () {
 				'**/*.png'
 			], { restore: true });
 
-		return fileStream = gulp.src(paths.src + version + '/**',
+		return gulp.src(paths.src + version + '/**',
 				{ base: paths.src + version + '/' }
 			) // source everything
 			// Only pass through files newer than dest files
@@ -191,7 +191,7 @@ gulp.task('default', ['makeZips'], function () {
 		'\n\n',
 		$.util.colors.cyan('Watching for changes:\n'),
 		'\t',
-		$.util.colors.green('IMG Files:'), watchedPatterns.img,
+		$.util.colors.green('Source files:'), watchedPatterns.img,
 		'\n'
 	);
 	// Watch Images
