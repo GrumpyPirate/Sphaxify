@@ -3,7 +3,7 @@ Previews/
 Original/
 node_modules/
 
-!Source/**
-!Compiled\ Size\ Packs/**
+!src/**
+!dist/**
 
 .DS_Store
