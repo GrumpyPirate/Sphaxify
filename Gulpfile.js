@@ -138,7 +138,9 @@ gulp.task('optimise', function () {
 							// Ensure 8-bit RGB
 							.bitdepth(8)
 							// Bilinear
-							.filter('Triangle')
+							// .filter('Triangle')
+							// 'Bicubic' (Catmull-Rom)
+							.filter('Catrom')
 							// Resize to % scale
 							.resize(pctScale, '%');
 					}))
