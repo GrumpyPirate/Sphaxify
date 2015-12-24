@@ -4,8 +4,8 @@
 // Paths for file assets
 // -----------------------------------------------------------------------------
 var paths = {
-		src:  'Source/',
-		dest: 'Compiled Size Packs/'
+		src:  'src/',
+		dest: 'dist/'
 	},
 	// custom plugin settings
 	// -----------------------------------------------------------------------------
