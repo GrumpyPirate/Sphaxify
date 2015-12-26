@@ -50,7 +50,8 @@ var gulp = require('gulp'),
 	$ = require('gulp-load-plugins')({
 		pattern: '*',
 		camelize: true
-	});
+	}),
+	path = require('path');
 
 /* -----------------------------------------------------------------------------
  * Global Functions
@@ -93,7 +94,13 @@ gulp.task('makeZips', ['optimise'], function () {
 		} // /for ... sizes
 	} // for ... versions
 
-	return mergedStream;
+	return mergedStream
+		.pipe($.notify({
+			title: 'Sphax Patch - ' + patchName,
+			message: 'Finished making size packs!',
+			icon: path.join(paths.src, versions[0], 'pack.png'),
+			sound: true
+		}));
 }); // /gulp.task('makeZips'...
 
 /* -----------------------------------------------------------------------------
