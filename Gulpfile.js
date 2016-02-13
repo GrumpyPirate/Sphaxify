@@ -1,3 +1,18 @@
+// Project setup
+// Edit the below section to customise the patch
+// -----------------------------------------------------------------------------
+// Set patch name - will be used to name .zip files
+var patchName = 'NoPatchName';
+// Initial size of source images - set this to the starting size of the patch
+// E.g. if resizing a 128x patch, set to 128
+var initialSize = 512;
+// Define which version folders inside src/ should be processed
+var versions = ['1.6.4', '1.7.10'];
+// Set how many times the original patch should be downsized (inclusive)
+// E.g. processing a 512x patch 5 times would produce: 512, 256, 128, 64, 32
+var resizeLevels = 5;
+
+
 /* -----------------------------------------------------------------------------
  * VARS
  * -------------------------------------------------------------------------- */
@@ -20,17 +35,8 @@ var paths = {
     watchedPatterns = {
         img: paths.src + '**/*.{png,mcmeta,txt}'
     },
-    // Patch name
-    patchName = 'NoPatchName',
-    // Define versions to process
-    versions = ['1.6.4', '1.7.10'],
     // Suffix to add onto created size pack directories
     suff = 'x',
-    // Initial size of source images (should be 512px)
-    initialSize = 512,
-    // Downsize the original pack this many times (inclusive), e.g.:
-    // 512, 256, 128, 64, 32
-    resizeLevels = 5,
     // Pre-populate a list of sizes
     sizes = (function () {
         var a = [];
