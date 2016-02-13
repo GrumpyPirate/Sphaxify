@@ -57,7 +57,8 @@ var gulp = require('gulp'),
         pattern: '*',
         camelize: true
     }),
-    path = require('path');
+    path = require('path'),
+    args = $.minimist(process.argv.slice(2));
 
 /* -----------------------------------------------------------------------------
  * Global Functions
@@ -77,7 +78,7 @@ gulp.task('makeZips', ['optimise'], function () {
         // i.e.: [1.6.4] [32x] Sphax Patch - NoPatchName.zip
         // ---------------------------------------------------------------------
         var packName = size + suff,
-            zipName = '[' + version + '] [' + size + 'x] Sphax Patch - ' + patchName + '.zip',
+            zipName = '[' + version + '] [' + size + 'x] Sphax Patch - ' + (args.patchname || patchName) + '.zip',
             targetDir = paths.dest + version + '/' + packName + '/';
 
         return gulp.src(targetDir + '**', { base: targetDir })
@@ -102,7 +103,7 @@ gulp.task('makeZips', ['optimise'], function () {
 
     return mergedStream
         .pipe($.notify({
-            title: 'Sphax Patch - ' + patchName,
+            title: 'Sphax Patch - ' + (args.patchname || patchName),
             message: 'Finished making size packs!',
             icon: path.join(paths.src, versions[0], 'pack.png'),
             sound: true
