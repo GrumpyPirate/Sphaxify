@@ -13,33 +13,42 @@ var initialSize = 512;
 // Set how many times the original patch should be downsized (inclusive)
 // E.g. processing a 512x patch 5 times would produce: 512, 256, 128, 64, 32
 var resizeLevels = 5;
+// Paths - set these to whatever, or simply leave as default
+var paths = {
+    // Source images/designs folder - place the source designs here
+    src:  'src/',
+    // Destination for generated size packs
+    dest: 'dist/'
+};
 
 
+
+/* -----------------------------------------------------------------------------
+ * Core logic below, only edit if you're brave/bored
+ * -------------------------------------------------------------------------- */
 /* -----------------------------------------------------------------------------
  * VARS
  * -------------------------------------------------------------------------- */
 // Paths for file assets
 // -----------------------------------------------------------------------------
-var paths = {
-        src:  'src/',
-        dest: 'dist/'
-    },
-    // custom plugin settings
-    // -------------------------------------------------------------------------
-    settings = {
+// custom plugin settings
+// -----------------------------------------------------------------------------
+var settings = {
         imagemin: {
             // Default is 3 (16 trials)
             optimizationLevel: 3
         }
     },
-    // watched filename patterns
-    // -------------------------------------------------------------------------
+// watched filename patterns
+// -----------------------------------------------------------------------------
     watchedPatterns = {
         img: paths.src + '**/*.{png,mcmeta,txt}'
     },
-    // Suffix to add onto created size pack directories
+// Suffix to add onto created size pack directories
+// -----------------------------------------------------------------------------
     suff = 'x',
-    // Pre-populate a list of sizes
+// Pre-populate a list of sizes
+// -----------------------------------------------------------------------------
     sizes = (function () {
         var a = [];
 
@@ -59,7 +68,9 @@ var gulp = require('gulp'),
         pattern: '*',
         camelize: true
     }),
+    // Node modules
     path = require('path'),
+    fs = require('fs'),
     args = $.minimist(process.argv.slice(2));
 
 /* -----------------------------------------------------------------------------
@@ -186,16 +197,22 @@ gulp.task('optimise', function () {
             });
     } // /function resizeStream
 
-    // For each version (1.6.4, 1.7.10, etc.)
-    for (var v = 0; v < versions.length; v++) {
-        // For each resiseLevel
-        for (var s = 0; s < sizes.length; s++) {
-            // Push a file stream to mergedStream
-            mergedStream.add(
-                resizeStream(versions[v], sizes[s])
-            );
-        } // /for ... sizes
-    } // /for ... versions
+    // For each dir within paths.src
+    fs.readdir(paths.src, function (err, files) {
+        if (files.length) {
+            // For each version (1.6.4, 1.7.10, etc.)
+            for (var v = 0; v < versions.length; v++) {
+                // For each resiseLevel
+                for (var s = 0; s < sizes.length; s++) {
+                    // Push a file stream to mergedStream
+                    mergedStream.add(
+                        resizeStream(versions[v], sizes[s])
+                    );
+                } // /for ... sizes
+            } // /for ... versions
+
+        }
+    });
 
     // Return merged streams to allow task to resolve
     return mergedStream;
@@ -203,15 +220,43 @@ gulp.task('optimise', function () {
 
 // default task
 // -----------------------------------------------------------------------------
-gulp.task('default', ['makeZips'], function () {
-    $.util.log(
-        '\n\n',
-        $.util.colors.cyan('Watching for changes:\n'),
-        '\t',
-        $.util.colors.green('Source files:'), watchedPatterns.img,
-        '\n'
-    );
-    // Watch Images
-    // -------------------------------------------------------------------------
-    gulp.watch(watchedPatterns.img, ['makeZips']);
+gulp.task('default', function () {
+    function watchFiles () {
+        $.util.log(
+            '\n\n',
+            $.util.colors.cyan('Watching for changes:\n'),
+            '\t' + $.util.colors.green('Source files:'), watchedPatterns.img,
+            '\n\n',
+            'Size packs will be regenerated when any of these filetypes change within',
+            $.util.colors.yellow('\'' + paths.src + '\''),
+            '.',
+            '\n'
+        );
+        // Watch Images
+        // -------------------------------------------------------------------------
+        gulp.watch(watchedPatterns.img, ['makeZips']);
+    } // /function watchFiles
+
+    // for each dir inside paths.src
+    fs.readdir(paths.src, function (err, files) {
+        if (files.length) {
+            watchFiles();
+        }
+        else {
+            $.util.log(
+                '\n\n',
+                '\t' + 'No source files found to process.',
+                '\n',
+                '\t' + 'Make sure you\'ve placed the folders you want to process inside the',
+                $.util.colors.yellow('\'' + paths.src + '\''),
+                'directory.',
+                '\n',
+                '\t' + 'Alternatively, edit the',
+                $.util.colors.yellow('\'paths\''),
+                'variable in',
+                $.util.colors.yellow('\'Gulpfile.js\''),
+                'to customise the source/destination directories.'
+            );
+        }
+    });
 }); // /default
