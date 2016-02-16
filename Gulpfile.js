@@ -294,10 +294,7 @@ gulp.task('default', function () {
     // for each dir inside paths.src
     fs.readdir(paths.src, function (err, files) {
         if (files.length) {
-            // watchFiles();
-            for (var i = files.length - 1; i >= 0; i--) {
-                console.log(files[i]);
-            }
+            watchFiles();
         }
         else {
             $.util.log(
