@@ -1,6 +1,8 @@
-// Project setup
-// Edit the below section to customise the patch
-// -----------------------------------------------------------------------------
+/* -----------------------------------------------------------------------------
+ * Sphax Patch - Setup
+ * -----------------------------------------------------------------------------
+ * Edit the below section to customise the patch
+ * -------------------------------------------------------------------------- */
 // Set patch name - will be used to name .zip files.
 // Alternatively, when calling 'gulp makeZips' on the command line, pass in the
 // argument '--patchname MyPatchName' to override
@@ -13,28 +15,22 @@ var initialSize = 512;
 var resizeLevels = 5;
 // Paths - set these to whatever, or simply leave as default
 var paths = {
-    // Source images/designs folder - place the source designs here
+    // Source images/designs folder - source designs should be placed here
     src:  'src/',
     // Destination for generated size packs
     dest: 'dist/'
 };
 
 
-
 /* -----------------------------------------------------------------------------
- * Core logic below, only edit if you're brave/bored
+ * Core logic below, only edit the below if you're brave/bored/interested
  * -------------------------------------------------------------------------- */
-/* -----------------------------------------------------------------------------
- * VARS
- * -------------------------------------------------------------------------- */
-// Paths for file assets
-// -----------------------------------------------------------------------------
 // custom plugin settings
 // -----------------------------------------------------------------------------
 var settings = {
         imagemin: {
             // Default is 3 (16 trials)
-            optimizationLevel: 3
+            optimizationLevel: 5
         }
     },
 // watched filename patterns
@@ -58,6 +54,7 @@ var settings = {
         return a;
     })();
 
+
 /* -----------------------------------------------------------------------------
  * GULP PLUGINS
  * -------------------------------------------------------------------------- */
@@ -73,8 +70,9 @@ var gulp = require('gulp'),
 // Get command line args
     args = $.minimist(process.argv.slice(2));
 
+
 /* -----------------------------------------------------------------------------
- * Global Functions
+ * GLOBAL FUNCTIONS
  * -------------------------------------------------------------------------- */
 // getDirs - returns an array of first-level directory names in a baseDir
 function getDirs(baseDir, callback) {
@@ -208,6 +206,7 @@ function zipStream(dirname, size) {
         });
 } // /function zipStream
 
+
 /* -----------------------------------------------------------------------------
  * TASKS
  * -------------------------------------------------------------------------- */
@@ -286,8 +285,9 @@ gulp.task('default', function () {
             '.',
             '\n'
         );
+
         // Watch Images
-        // -------------------------------------------------------------------------
+        // ---------------------------------------------------------------------
         gulp.watch(watchedPatterns.img, ['optimise']);
     } // /function watchFiles
 
@@ -312,5 +312,5 @@ gulp.task('default', function () {
                 'to customise the source/destination directories.'
             );
         }
-    });
+    }); // /fs.readdir(paths.src...
 }); // /default
