@@ -99,6 +99,16 @@ How to use
     - `gulp makeZips` - runs optimise, then zips up each size pack in `dist/`
     - `gulp` - will begin watching your `src/` directory for any changes to `.png`, `.txt` or `.mcmeta` files, and will run the optimise only on images newer than the equivalents currently in `dist/`. Stop watching at any time by hitting `CTRL+C`
 
+
+Current limitations
+--------------------------------------------------------------------------------
+- **Some mods don't play well with images that have been passed through OptiPNG, particularly images that have had their bit depth reduced to PNG-8 from PNG-24**
+    - Test how your texture pack works in-game to see if any textures don't look quite right. For any such cases, add the texture's filename to the `filterImagemin` list in `Gulpfile.js` (around line 128~)
+- To prevent certain images from being resized (GUIs are ignored by default), add the filenames to the `filterResizeables` list in `Gulpfile.js` (around line 134~)
+- To prevent certain images from having their transparency removed - i.e. for a lot of flud textures with transparency - add their filenames to the `filterThresholdable` list in `Gulpfile.js` (around line 141~)
+
+A much simpler method for customising these is planned for the future.
+
 Issues
 --------------------------------------------------------------------------------
-Please report any issues
+This is a young project, please report any issues encountered and they'll be fixed as soon as possible.
