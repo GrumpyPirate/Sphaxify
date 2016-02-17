@@ -1,13 +1,12 @@
 {
   "private": true,
-  "name": "sphax-community-patch",
+  "name": "sphaxify",
   "version": "1.0.0",
   "Author": "Edward Cobbold <edward.cobbold@gmail.com>",
   "Contributors": [],
   "license": "MIT",
   "scripts": {
-    "install-app": "npm install && gulp",
-    "run-app": "gulp"
+    "setup": "which gulp || npm install -g gulp gulp-cli || sudo npm install gulp gulp-cli && npm install"
   },
   "main": "Gulpfile.js",
   "devDependencies": {

@@ -267,7 +267,14 @@ gulp.task('optimise', function () {
 
     // Return mergedStream, allows task to resolve once all async-added streams
     // have collectively resolved
-    return mergedStream;
+    return mergedStream
+        .on('end', function () {
+            $.nodeNotifier.notify({
+                title: 'Sphax Patch - ' + (args.patchname || patchName),
+                message: 'Finished generating size packs!',
+                // icon: path.join(paths.src, dirs[0], 'pack.png')
+            });
+        });
 });
 
 
