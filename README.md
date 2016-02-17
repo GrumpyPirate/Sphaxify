@@ -99,6 +99,7 @@ How to use
     - `gulp makeZips` - runs optimise, then zips up each size pack in `dist/`
     - `gulp` - will begin watching your `src/` directory for any changes to `.png`, `.txt` or `.mcmeta` files, and will run the optimise only on images newer than the equivalents currently in `dist/`. Stop watching at any time by hitting `CTRL+C`
 
+
 Issues
 --------------------------------------------------------------------------------
-Please report any issues
+This is a young project, please report any issues encountered and they'll be fixed as soon as possible.
