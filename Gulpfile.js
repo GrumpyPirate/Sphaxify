@@ -125,16 +125,23 @@ function resizeStream(dirname, size) {
         customDirname = path.join(dirname, packName), // 1.7.10/256x
         ignoreStuff = $.ignore('**/*.{psb,psd,DS_Store,db}'),
         // Optimise these files:
-        filterImagemin = $.filter(['**/*.png'], { restore: true }),
+        filterImagemin = $.filter([
+            '**/*.png',
+            // Add similar entries to the below to disable image optimisation for specific files, e.g.:
+            // '!**/blocks/someBlock.png',
+        ], { restore: true }),
         // Resize these files:
         filterResizeables = $.filter([
             '**/*.png',
-            // By default, don't resize GUIs
-            '!**/{gui,guis}/**/*.png'
+            // By default, don't resize GUIs (i.e. anything inside a gui/ or guis/ folder)
+            '!**/{gui,guis}/**/*.png',
+            // Add more here if needed
         ], { restore: true }),
-        // Apply threshold filter to these files:
+        // Apply threshold filter to (remove transparent pixels from) these files:
         filterThresholdable = $.filter([
-            '**/*.png'
+            '**/*.png',
+            // Add similar entries to the below to disable thresholding for specific files, e.g.:
+            // '!**/blocks/someFluidThatNeedsToKeepItsTransparency.png',
         ], { restore: true });
 
     return gulp.src(path.join(paths.src, dirname, '**'),
