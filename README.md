@@ -1,4 +1,4 @@
-Sphaxify - a BDCraft Community Patch Builder (v1.0.0)
+Sphaxify - a [BDCraft](http://bdcraft.net/community/) Community Patch Builder (v1.0.0)
 ================================================================================
 This set of build tools aims to make the process of generating BDCraft Patch size packs as quick and hassle-free as possible, so that patch artists can focus their creative energy on *actual texturing* rather than mind-numbing asset organisation (zzz).
 
@@ -31,7 +31,7 @@ Features
     - Useful for troublesome images that need to be kept 24bit, need to be kept the same size (hello, GUIs) or need transparency (some fluid textures)
 - **Can watch your `src/` directory for any changes while you work, to auto-regenerate packs on-the-fly**
     - Any changes to `.png`, `.txt` or `.mcmeta` files will trigger a fresh generation of size packs
-    - Allows patch artists to stay creative!
+    - Allows patch artists to keep creative, letting your machine do the grunt work
 
 
 How to Install
@@ -66,7 +66,7 @@ The build system is run using the command line (or via the included double-click
 
 ### All OSes ###
 
-- **Download and unzip a Release of Sphaxify**
+- **Download and unzip a [Release of Sphaxify](https://github.com/GrumpyPirate/Sphaxify/releases/latest)**
     - Or alternatively, `git clone` this project into whatever directory you like
 - **Open a terminal/command prompt, `cd` into the folder**
     - Windows shortcut - open the folder in the file explorer, type `cmd` in the explorer address bar and hit `Enter`
@@ -90,11 +90,15 @@ How to use
     - If you'd like to specify where your source images live, edit the paths.src/dest - otherwise, leave these as default.
 
 - **Customise the included `pack.mcmeta` and `pack.psd`**
-    - Give your patch some flair, and let the world know who you are!
+    - Give your patch some flair, let the world know who you are
 
-- **From a terminal/command prompt in the project directory (same level as Gulpfile.js:**
+- **From a terminal/command prompt in the project directory (same level as Gulpfile.js):**
     - `gulp optimise` - generates size packs into `dist/`
-        - May take a while when first run, depending on the size of your texture pack - go and grab a coffee!
+        - Likely to take a while when first run, depending on the size of your texture pack - go and grab a coffee
         - A system notification will appear when complete
     - `gulp makeZips` - runs optimise, then zips up each size pack in `dist/`
     - `gulp` - will begin watching your `src/` directory for any changes to `.png`, `.txt` or `.mcmeta` files, and will run the optimise only on images newer than the equivalents currently in `dist/`. Stop watching at any time by hitting `CTRL+C`
+
+Issues
+--------------------------------------------------------------------------------
+Please report any issues
