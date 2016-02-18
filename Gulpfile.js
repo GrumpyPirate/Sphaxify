@@ -13,6 +13,42 @@ var initialSize = 512;
 // Set how many times the original patch should be downsized (inclusive)
 // E.g. processing a 512x patch 5 times would produce: 512, 256, 128, 64, 32
 var resizeLevels = 5;
+// Prevent these files from being included in generated size packs:
+var ignoreTheseFiles = [
+    // Design files
+    '**/*.{ai,psb,psd}',
+    // Win/OSX system files
+    '**/*.{DS_Store,db}',
+];
+// Optimise these files:
+var compressables = [
+    '**/*.png',
+    // Add similar entries to the below to disable image optimisation for specific files, e.g.:
+    // '!**/blocks/someBlock.png',
+    // '!**/blocks/someOtherBlock.png',
+    // '!**/items/someItem.png',
+    // etc...
+];
+// Resize these files:
+var resizeables = [
+    '**/*.png',
+    // By default, don't resize GUIs (i.e. anything inside a gui/ or guis/ folder)
+    '!**/{gui,guis}/**/*.png',
+    // Add similar entries to the below to disable resizing for specific files, e.g.:
+    // '!**/blocks/someBlock.png',
+    // '!**/blocks/someOtherBlock.png',
+    // '!**/items/someItem.png',
+    // etc...
+];
+// Apply threshold filter to (remove transparent pixels from) these files:
+var thresholdables = [
+    '**/*.png',
+    // Add similar entries to the below to disable thresholding for specific files, e.g.:
+    // '!**/blocks/someBlock.png',
+    // '!**/blocks/someOtherBlock.png',
+    // '!**/items/someItem.png',
+    // etc...
+];
 // Paths - set these to whatever, or simply leave as default
 var paths = {
     // Source images/designs folder - source designs should be placed here
@@ -123,26 +159,12 @@ function resizeStream(dirname, size) {
     var pctScale = size / initialSize * 100 + '%', // 50%
         packName = size + suff, // 256x
         customDirname = path.join(dirname, packName), // 1.7.10/256x
-        ignoreStuff = $.ignore('**/*.{psb,psd,DS_Store,db}'),
         // Optimise these files:
-        filterImagemin = $.filter([
-            '**/*.png',
-            // Add similar entries to the below to disable image optimisation for specific files, e.g.:
-            // '!**/blocks/someBlock.png',
-        ], { restore: true }),
+        filterCompressables = $.filter(compressables, { restore: true });
         // Resize these files:
-        filterResizeables = $.filter([
-            '**/*.png',
-            // By default, don't resize GUIs (i.e. anything inside a gui/ or guis/ folder)
-            '!**/{gui,guis}/**/*.png',
-            // Add more here if needed
-        ], { restore: true }),
+        filterResizeables = $.filter(resizeables, { restore: true });
         // Apply threshold filter to (remove transparent pixels from) these files:
-        filterThresholdable = $.filter([
-            '**/*.png',
-            // Add similar entries to the below to disable thresholding for specific files, e.g.:
-            // '!**/blocks/someFluidThatNeedsToKeepItsTransparency.png',
-        ], { restore: true });
+        filterThresholdables = $.filter(thresholdables, { restore: true });
 
     return gulp.src(path.join(paths.src, dirname, '**'),
             { base: path.join(paths.src, dirname) }
@@ -150,9 +172,9 @@ function resizeStream(dirname, size) {
         // Only pass through files newer than dest files
         .pipe($.newer(path.join(paths.dest, dirname, packName)))
         // Filter out crap
-        .pipe(ignoreStuff)
+        .pipe($.ignore(ignoreTheseFiles))
         // Do the following steps to PNGs only( i.e. no .txt, .mcmeta files)
-        .pipe(filterImagemin)
+        .pipe(filterCompressables)
             // Do the following to ONLY resizeables
             .pipe(filterResizeables)
                 // Use gulp-gm to resize images
@@ -170,17 +192,17 @@ function resizeStream(dirname, size) {
             .pipe(filterResizeables.restore)
             // Use gulp-gm to  apply threshold to (remove partial transparency from) images
             // BUT - Apply only to images we want to remove transparency from
-            .pipe(filterThresholdable)
+            .pipe(filterThresholdables)
                 .pipe($.gm(function (imageFile) {
                     return imageFile
                         // Ensure no transparent edges on all PNGs
                         .operator('Opacity', 'Threshold', 50, '%');
                 }))
-            .pipe(filterThresholdable.restore)
+            .pipe(filterThresholdables.restore)
             // pass all images through gulp-imagemin
             .pipe($.imagemin(settings.imagemin))
         // Restore non-PNG files to stream
-        .pipe(filterImagemin.restore)
+        .pipe(filterCompressables.restore)
         .pipe($.rename(function (thisPath) {
             // { dirname: 'Example Project 2',
             //   basename: 'test1',
@@ -285,9 +307,9 @@ gulp.task('optimise', function () {
 });
 
 
-// default task
+// Watch task
 // -----------------------------------------------------------------------------
-gulp.task('default', function () {
+gulp.task('watch', function () {
     function watchFiles () {
         $.util.log(
             '\n\n',
@@ -327,4 +349,4 @@ gulp.task('default', function () {
             );
         }
     }); // /fs.readdir(paths.src...
-}); // /default
+}); // /watch
