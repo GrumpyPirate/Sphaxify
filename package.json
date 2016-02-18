@@ -1,12 +1,13 @@
 {
-  "private": true,
   "name": "sphaxify",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "Author": "Edward Cobbold <edward.cobbold@gmail.com>",
   "Contributors": [],
   "license": "MIT",
   "scripts": {
-    "setup": "which gulp || npm install -g gulp gulp-cli || sudo npm install gulp gulp-cli && npm install"
+    "optimise": "gulp optimise",
+    "makezips": "gulp makeZips",
+    "watch": "gulp watch"
   },
   "main": "Gulpfile.js",
   "devDependencies": {
