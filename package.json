@@ -1,8 +1,12 @@
 {
   "name": "sphaxify",
   "version": "1.0.3",
-  "Author": "Edward Cobbold <edward.cobbold@gmail.com>",
-  "Contributors": [],
+  "author": "Edward Cobbold <edward.cobbold@gmail.com>",
+  "contributors": [],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GrumpyPirate/Sphaxify.git"
+  },
   "license": "MIT",
   "scripts": {
     "optimise": "gulp optimise",
