@@ -1,5 +1,10 @@
-CALL which gulp || npm install -g gulp gulp-cli || sudo npm install -g gulp gulp-cli
-CALL npm install
-CALL gulp makeZips
+@ECHO Generating size packs + zipping up...
+@ECHO.
+
+CALL npm run makezips
+@ECHO.
+
+@ECHO Complete!
+@ECHO.
 
 PAUSE
