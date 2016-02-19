@@ -1,4 +1,4 @@
-![Sphaxify](http://i63.tinypic.com/js0yu9.jpg)
+![Sphaxify logo](logo.png)
 
 Sphaxify - an Automated [BDCraft](http://bdcraft.net/community/) Community Patch Builder
 ================================================================================
