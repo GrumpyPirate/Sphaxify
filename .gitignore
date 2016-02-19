@@ -1,9 +1,16 @@
+# Ignore these
 Assets/
 Previews/
 Original/
-node_modules/
 
+# ... but always include these
 !src/**
 !dist/**
 
+# OS
+.db
 .DS_Store
+
+# Node
+node_modules/
+npm-debug.log
