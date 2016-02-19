@@ -24,7 +24,7 @@ Features
         - To be kept 24bit (non-indexed colour)
         - To be kept the same size (hello, GUIs)
         - Transparency (glass or fluid textures)
-- **Can watch your `src/` directory for any changes while you work, to auto-regenerate packs on-the-fly**
+- **Can watch your `source-designs/` directory for any changes while you work, to auto-regenerate packs on-the-fly**
     - Any changes to `.png`, `.txt` or `.mcmeta` files will trigger a fresh generation of size packs
     - Allows patch artists to keep creative, letting your machine do the grunt work in the background
 
@@ -64,23 +64,23 @@ How to Install
 
 How to use
 --------------------------------------------------------------------------------
-1. **Place your source images inside `src/{MC_VERSION}/`, e.g. `src/1.7.10/`**
+1. **Place your source images inside `source-designs/{MC_VERSION}/`, e.g. `source-designs/1.7.10/`**
     - Mimic how the textures would be laid out when used as a texture pack. A typical working layout would be
-        - `My Sphax Texture Project/src/1.7.10/assets/someincrediblemod/textures/...`
-        - `My Sphax Texture Project/src/1.7.10/pack.mcmeta`
-        - `My Sphax Texture Project/src/1.7.10/pack.png`
+        - `My Sphax Texture Project/source-designs/1.7.10/assets/someincrediblemod/textures/...`
+        - `My Sphax Texture Project/source-designs/1.7.10/pack.mcmeta`
+        - `My Sphax Texture Project/source-designs/1.7.10/pack.png`
     - An example `1.7.10/` folder has been provided, along with a barebones `pack.mcmeta` and `pack.png/psd`
 
 2. **Customise the builder options by opening `Gulpfile.js` in your favourite text editor.** You'll see some variables at the top of the file - customise these to how you want your patch to be built and named:
     - **Set `patchName`** to whatever you'd like your generated .zip files to be named
     - **Set `initialSize`** to the resolution of your source images (default is 512)
     - **Set `resizeLevels`** to however many times you want the patch to be downsized
-    - **Optional**: If you'd like to specify the location of your source images (and where they'll be generated), edit `paths.src/dest` - otherwise, leave as default.
+    - **Optional**: If you'd like to specify the location of your source images (and where they'll be generated), edit `paths.source-designs/dest` - otherwise, leave as default.
 
 3. **Ready! You can now run any of the following from a terminal/command prompt within the folder:**
-    - **`npm run optimise`** - generates size packs into `dist/`
-    - **`npm run makezips`** - runs optimise, then zips up each size pack in `dist/`
-    - **`npm run watch`** - will begin watching your `src/` directory for any changes to `.png`, `.txt` or `.mcmeta` files, and will run the optimise only on images newer than the equivalents currently in `dist/`. Stop watching at any time by hitting `CTRL+C`
+    - **`npm run optimise`** - generates size packs into `size-packs/`
+    - **`npm run makezips`** - runs optimise, then zips up each size pack in `size-packs/`
+    - **`npm run watch`** - will begin watching your `source-designs/` directory for any changes to `.png`, `.txt` or `.mcmeta` files, and will run the optimise only on images newer than the equivalents currently in `size-packs/`. Stop watching at any time by hitting `CTRL+C`
 
 
 **Note** - `optimise` and `makezips` are likely to take a while when first run, depending on the size of your texture pack - go and grab a coffee. The console will show the progress of all processed images, and a system notification will appear when complete.
