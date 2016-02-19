@@ -41,6 +41,7 @@ How to Install
 1. **Install [Node JS](https://nodejs.org/en/) latest**
 2. **Install the graphic processing libraries [ImageMagick](http://www.imagemagick.org/script/binary-releases.php#windows) and [GraphicsMagick](http://www.graphicsmagick.org/download.html)**
     - Choose the recommended Q16 version
+    - You may have to grab GraphicsMagick from [SourceForge](https://sourceforge.net/projects/graphicsmagick/files/graphicsmagick-binaries/) (sorry), as the FTP is often broken
 
 #### Mac OSX ####
 1. **Install [Homebrew](http://brew.sh/)**
