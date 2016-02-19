@@ -1,3 +1,5 @@
+![Sphaxify](http://i63.tinypic.com/js0yu9.jpg)
+
 Sphaxify - an Automated [BDCraft](http://bdcraft.net/community/) Community Patch Builder
 ================================================================================
 This simple-to-use [Gulp](http://gulpjs.com/) build script aims to make the process of generating BDCraft Patch size packs as quick and hassle-free as possible, so that patch artists can focus their creative energy on *actual texturing* rather than mind-numbing asset organisation (zzz).
