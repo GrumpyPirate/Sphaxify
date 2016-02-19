@@ -52,9 +52,9 @@ var thresholdables = [
 // Paths - set these to whatever, or simply leave as default
 var paths = {
     // Source images/designs folder - source designs should be placed here
-    src:  'src/',
+    src:  'source-designs/',
     // Destination for generated size packs
-    dest: 'dist/'
+    dest: 'size-packs/'
 };
 
 
