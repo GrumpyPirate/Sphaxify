@@ -1,4 +1,5 @@
 #!/bin/bash
+cd -- "$(dirname "$0")"
 printf "Installng Sphaxify locally...\n"
 
 # Install local packages
