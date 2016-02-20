@@ -1,4 +1,5 @@
 #!/bin/bash
+cd -- "$(dirname "$0")"
 printf "Generating size packs + zipping up...\n"
 
 # Run zip task
