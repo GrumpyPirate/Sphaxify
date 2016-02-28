@@ -67,8 +67,8 @@ var settings = {
         imagemin: {
             // Default is 2 (8 trials)
             optimizationLevel: 3,
-            keepBitDepth: true,
-            keepColorType: false,
+            keepBitDepth: false,
+            keepColorType: true,
             keepPalette: false,
             keepIDAT: false,
         }
