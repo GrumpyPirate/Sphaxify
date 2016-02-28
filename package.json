@@ -26,7 +26,7 @@
     "gulp-rename": "^1.2.2",
     "gulp-util": "^3.0.7",
     "gulp-zip": "^3.2.0",
-    "imagemin-pngcrush": "^4.1.0",
+    "imagemin-optipng": "github:grumpypirate/imagemin-optipng",
     "merge-stream": "^1.0.0",
     "minimist": "^1.2.0",
     "node-notifier": "^4.5.0"
