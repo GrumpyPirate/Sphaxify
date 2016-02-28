@@ -9,12 +9,10 @@
 var patchName = 'NoPatchName';
 // Initial size of source images - set this to the starting size of the patch
 // E.g. if resizing a 128x patch, set to 128
-// var initialSize = 512;
-var initialSize = 64;
+var initialSize = 512;
 // Set how many times the original patch should be downsized (inclusive)
 // E.g. processing a 512x patch 5 times would produce: 512, 256, 128, 64, 32
-// var resizeLevels = 5;
-var resizeLevels = 1;
+var resizeLevels = 5;
 // Prevent these files from being included in generated size packs:
 var ignoreTheseFiles = [
     // Design files
@@ -66,11 +64,6 @@ var paths = {
 // custom plugin settings
 // -----------------------------------------------------------------------------
 var settings = {
-        imageminPngcrush: {
-            // Prevent lossless bit-depth/colour level reduction
-            // - stops PNGS from being reduced to Greyscale, causing display issues
-            reduce: false
-        },
         imagemin: {
             // Default is 2 (8 trials)
             optimizationLevel: 3,
