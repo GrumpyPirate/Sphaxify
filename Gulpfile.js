@@ -20,15 +20,6 @@ var ignoreTheseFiles = [
     // Win/OSX system files
     '**/*.{DS_Store,db}',
 ];
-// Optimise these files using OptiPNG:
-var compressables = [
-    '**/*.png',
-    // Add similar entries to the below to disable image optimisation for specific files, e.g.:
-    // '!**/blocks/someBlock.png',
-    // '!**/blocks/someOtherBlock.png',
-    // '!**/items/someItem.png',
-    // etc...
-];
 // Resize these files:
 var resizeables = [
     '**/*.png',
@@ -49,6 +40,15 @@ var thresholdables = [
     // '!**/items/someItem.png',
     // etc...
 ];
+// Optimise these files using PNGCrush:
+var compressables = [
+    '**/*.png',
+    // Add similar entries to the below to disable lossless image compression for specific files, e.g.:
+    // '!**/blocks/someBlock.png',
+    // '!**/blocks/someOtherBlock.png',
+    // '!**/items/someItem.png',
+    // etc...
+];
 // Paths - set these to whatever, or simply leave as default
 var paths = {
     // Source images/designs folder - source designs should be placed here
@@ -64,9 +64,10 @@ var paths = {
 // custom plugin settings
 // -----------------------------------------------------------------------------
 var settings = {
-        imagemin: {
-            // Default is 3 (16 trials)
-            optimizationLevel: 5
+        imageminPngcrush: {
+            // Prevent lossless bit-depth/colour level reduction
+            // - stops PNGS from being reduced to Greyscale, causing display issues
+            reduce: false
         }
     },
 // watched filename patterns
@@ -201,11 +202,11 @@ function resizeStream(dirname, size) {
                         .operator('Opacity', 'Threshold', 50, '%');
                 }))
             .pipe(filterThresholdables.restore)
-            // pass images registered in compressables through gulp-imagemin
+            // pass images registered in compressables through imagemin
             .pipe(filterCompressables)
                 // Measure file-by-file byte difference
                 .pipe($.bytediff.start())
-                    .pipe($.imagemin(settings.imagemin))
+                    .pipe($.imageminPngcrush(settings.imageminPngcrush)())
                 .pipe($.bytediff.stop())
             .pipe(filterCompressables.restore)
         // Restore non-PNG files to stream
