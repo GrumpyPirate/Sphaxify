@@ -40,7 +40,7 @@ var thresholdables = [
     // '!**/items/someItem.png',
     // etc...
 ];
-// Optimise these files using PNGCrush:
+// Optimise these files using imagemin:
 var compressables = [
     '**/*.png',
     // Add similar entries to the below to disable lossless image compression for specific files, e.g.:
@@ -215,9 +215,6 @@ function resizeStream(dirname, size) {
         // Restore non-PNG files to stream
         .pipe(filterPNG.restore)
         .pipe($.rename(function (thisPath) {
-            // { dirname: 'Example Project 2',
-            //   basename: 'test1',
-            //   extname: '.png' }
             thisPath.dirname = path.join(customDirname, thisPath.dirname);
         }))
         .pipe(gulp.dest(paths.dest))
