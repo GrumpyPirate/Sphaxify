@@ -20,7 +20,7 @@ var ignoreTheseFiles = [
     // Win/OSX system files
     '**/*.{DS_Store,db}',
 ];
-// Optimise these files:
+// Optimise these files using OptiPNG:
 var compressables = [
     '**/*.png',
     // Add similar entries to the below to disable image optimisation for specific files, e.g.:
@@ -159,7 +159,9 @@ function resizeStream(dirname, size) {
     var pctScale = size / initialSize * 100 + '%', // 50%
         packName = size + suff, // 256x
         customDirname = path.join(dirname, packName), // 1.7.10/256x
-        // Optimise these files:
+        // Set up PNG-only file filter:
+        filterPNG = $.filter('**/*.png', { restore: true });
+        // Optimise these files using OptiPNG:
         filterCompressables = $.filter(compressables, { restore: true });
         // Resize these files:
         filterResizeables = $.filter(resizeables, { restore: true });
@@ -174,7 +176,7 @@ function resizeStream(dirname, size) {
         // Filter out crap
         .pipe($.ignore(ignoreTheseFiles))
         // Do the following steps to PNGs only( i.e. no .txt, .mcmeta files)
-        .pipe(filterCompressables)
+        .pipe(filterPNG)
             // Do the following to ONLY resizeables
             .pipe(filterResizeables)
                 // Use gulp-gm to resize images
@@ -199,10 +201,15 @@ function resizeStream(dirname, size) {
                         .operator('Opacity', 'Threshold', 50, '%');
                 }))
             .pipe(filterThresholdables.restore)
-            // pass all images through gulp-imagemin
-            .pipe($.imagemin(settings.imagemin))
+            // pass images registered in compressables through gulp-imagemin
+            .pipe(filterCompressables)
+                // Measure file-by-file byte difference
+                .pipe($.bytediff.start())
+                    .pipe($.imagemin(settings.imagemin))
+                .pipe($.bytediff.stop())
+            .pipe(filterCompressables.restore)
         // Restore non-PNG files to stream
-        .pipe(filterCompressables.restore)
+        .pipe(filterPNG.restore)
         .pipe($.rename(function (thisPath) {
             // { dirname: 'Example Project 2',
             //   basename: 'test1',

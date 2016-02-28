@@ -16,6 +16,7 @@
   "main": "Gulpfile.js",
   "devDependencies": {
     "gulp": "^3.9.1",
+    "gulp-bytediff": "^1.0.0",
     "gulp-filter": "^3.0.1",
     "gulp-gm": "0.0.8",
     "gulp-ignore": "^2.0.1",
@@ -25,7 +26,7 @@
     "gulp-notify": "^2.2.0",
     "gulp-rename": "^1.2.2",
     "gulp-util": "^3.0.7",
-    "gulp-zip": "^3.1.0",
+    "gulp-zip": "^3.2.0",
     "merge-stream": "^1.0.0",
     "minimist": "^1.2.0",
     "node-notifier": "^4.5.0"
