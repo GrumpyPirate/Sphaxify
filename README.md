@@ -80,10 +80,12 @@ How to use
         - `My Sphax Texture Project/source-designs/1.7.10/pack.png`
     - An example `1.7.10/` folder has been provided, along with a barebones `pack.mcmeta` and `pack.png/psd`
 
-2. **Customise the builder options by opening `Gulpfile.js` in your favourite text editor.** You'll see some variables at the top of the file - customise these to how you want your patch to be built and named:
+2. **Customise the build options by opening `Gulpfile.js` in your favourite text editor.** You'll see some variables at the top of the file - customise these to how you want your patch to be built and named:
     - **Set `patchName`** to whatever you'd like your generated .zip files to be named
     - **Set `initialSize`** to the resolution of your source images (default is 512)
     - **Set `resizeLevels`** to however many times you want the patch to be downsized
+    - **Add to `resizeables`** any images you don't want resized
+    - **Add to `thresholdables`** any images you need to keep their transparency
     - **Optional**: If you'd like to specify the location of your source images (and where they'll be generated), edit `paths.src/dest` - otherwise, leave as default.
 
 3. **Ready! You can now run any of the following from a terminal/command prompt within the folder:**
