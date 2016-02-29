@@ -2,31 +2,39 @@
 
 Sphaxify - an Automated [BDCraft](http://bdcraft.net/community/) Community Patch Builder
 ================================================================================
-This simple-to-use [Gulp](http://gulpjs.com/) build script aims to make the process of generating BDCraft Patch size packs as quick and hassle-free as possible, so that patch artists can focus their creative energy on *actual texturing* rather than mind-numbing asset organisation (zzz).
+This is a simple [Gulp](http://gulpjs.com/) script for patch artists to use when creating BDCraft texture packs, automating the boring resizing/zipping part that no-one likes.
+
+It takes a folder of source images, then resizes/optimises/removes transparent pixels from everything into separate 512x, 256x, 128x... etc. folders, then zips each one up into neatly-named files.
+
+__Everything is configurable.__
 
 
 Features
 --------------------------------------------------------------------------------
 - **Automatically resizes all images as needed**
-    - Source **512x** images are compiled to **512x**, **256x**, **128x**, **64x**, and **32x** into their own dedicated directories.
-    - This is fully configurable - is your source only 128x? Want to only generate packs down to 64x? *No problem.*
+    - Source **512x** images are resized to **256x**, **128x**, **64x**, and **32x** into their own directories
+    - This is fully configurable - is your source only 128x? Want to only generate packs down to 64x? _No problem._
+
 - **Optimises generated PNGs losslessly to ensure small filesizes**
-    - Passes all images through OptiPNG to ensure the patch uses as little VRAM as possible, for the best possible system performance on users' machines.
+    - Ensures the patch uses as little VRAM as possible, for better system performance on users' machines
+
 - **Removes any semi-transparent pixels from texture edges**
-    - Ensures no texture flickering with Minecraft's awkward graphics engine.
-    - Uses an 'either-or' method of setting pixel colour intensity - pixels below 50% get removed, above 50% get converted to 100% intensity.
+    - Ensures no texture flickering with Minecraft's graphics engine
+    - Uses an 'either-or' method of setting pixel colour intensity - pixels below 50% get removed, above 50% get converted to 100% intensity
+
 - **Saves processed images to separate, neatly-named directories**
-    - The script will generate separate directories for each set of processed files, leaving the source images untouched - allowing generated packs to be chucked away and simply regenerated whenever needed without worry.
-- **Zips up each generated pack with clean, standardised filenames**
+    - The build system will generate separate directories for each set of processed files, leaving the source images untouched
+    - This allows generated packs to be chucked away and simply regenerated whenever needed without worry
+
+- **Zips up each generated pack with nice, standardised filenames**
     - E.g. `[128x] [1.7.10] Sphax Patch - SomeIncredibleMod.zip`
-- **Allows specific images to be skipped when resizing, optimising and thresholding**
-    - Useful for troublesome images that need:
-        - To be kept 24bit (non-indexed colour)
-        - To be kept the same size (hello, GUIs)
-        - Transparency (glass or fluid textures)
+
+- **Allows certain images to be excluded from resizing/transparent pixel removal**
+    - Useful for troublesome images that need to be kept the same size (hello, GUIs) or need transparency (some fluid textures)
+    - GUIs are excluded by default
+
 - **Can watch your `source-designs/` directory for any changes while you work, to auto-regenerate packs on-the-fly**
     - Any changes to `.png`, `.txt` or `.mcmeta` files will trigger a fresh generation of size packs
-    - Allows patch artists to keep creative, letting your machine do the grunt work in the background
 
 
 Requirements
@@ -59,6 +67,7 @@ How to Install
 - **Open a terminal/command prompt, browse (`cd`) to the Sphaxify folder**
     - A simple Windows shortcut: open the folder in the file explorer, type `cmd` in the explorer address bar and hit `Enter`. This'll open a command prompt in the directory
 - **`npm install`**
+- **Alternatively, double-click `_Install.bat` (Windows) or `_Install.sh` (Mac OSX/Linux)**
 - **When complete, Sphaxify is ready to use.**
 
 
@@ -75,26 +84,17 @@ How to use
     - **Set `patchName`** to whatever you'd like your generated .zip files to be named
     - **Set `initialSize`** to the resolution of your source images (default is 512)
     - **Set `resizeLevels`** to however many times you want the patch to be downsized
-    - **Optional**: If you'd like to specify the location of your source images (and where they'll be generated), edit `paths.source-designs/dest` - otherwise, leave as default.
+    - **Optional**: If you'd like to specify the location of your source images (and where they'll be generated), edit `paths.src/dest` - otherwise, leave as default.
 
 3. **Ready! You can now run any of the following from a terminal/command prompt within the folder:**
     - **`npm run optimise`** - generates size packs into `size-packs/`
     - **`npm run makezips`** - runs optimise, then zips up each size pack in `size-packs/`
     - **`npm run watch`** - will begin watching your `source-designs/` directory for any changes to `.png`, `.txt` or `.mcmeta` files, and will run the optimise only on images newer than the equivalents currently in `size-packs/`. Stop watching at any time by hitting `CTRL+C`
 
+4. **Or, if you don't want to use the command line**
+    - simply double-click either `_MakePacks.bat` (Windows) or `_MakePacks.sh` (Mac OSX/Linux) to make everything.
 
 **Note** - `optimise` and `makezips` are likely to take a while when first run, depending on the size of your texture pack - go and grab a coffee. The console will show the progress of all processed images, and a system notification will appear when complete.
-
-
-Current limitations
---------------------------------------------------------------------------------
-- **Some mods don't play well with images that have been passed through OptiPNG, particularly images that have had their bit depth reduced to PNG-8 from PNG-24**
-    - Test how your texture pack works in-game to see if any textures don't look quite right. For any such cases, add the texture's filename to the `filterImagemin` list in `Gulpfile.js` (around line 128~). This will prevent these files from being passed through OptiPNG.
-    - For example, **Mekanism** steel blocks, **Immersive Engineering** machine top/side, and **Railcraft** Quarried Stone all suffer from this issue, as their colour palettes end up getting indexed
-- **To prevent certain images from being resized (GUIs are ignored by default)**: add the filenames to the `filterResizeables` list in `Gulpfile.js` (around line 134~)
-- **To prevent certain images from having their transparency removed (e.g. fluids, glass)**:  add their filenames to the `filterThresholdable` list in `Gulpfile.js` (around line 141~)
-
-A much simpler method for customising these is planned for the future.
 
 
 Issues
