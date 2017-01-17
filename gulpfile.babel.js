@@ -20,7 +20,7 @@ const PATHS = {
 const SETTINGS = {
         imagemin: {
             // Default is 2 (8 trials)
-            optimizationLevel: 3,
+            optimizationLevel: 4,
             keepBitDepth: false,
             keepColorType: true,
             keepPalette: false,
