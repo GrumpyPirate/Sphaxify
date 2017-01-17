@@ -1,11 +1,9 @@
 # Ignore these
-Assets/
-Previews/
-Original/
+
 
 # ... but always include these
-!src/**
-!dist/**
+!source\-designs/**
+!size\-packs/**
 
 # OS
 .db
@@ -14,3 +12,4 @@ Original/
 # Node
 node_modules/
 npm-debug.log
+yarn.lock
