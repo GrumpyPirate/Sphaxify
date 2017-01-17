@@ -80,13 +80,74 @@ How to use
         - `My Sphax Texture Project/source-designs/1.7.10/pack.png`
     - An example `1.7.10/` folder has been provided, along with a barebones `pack.mcmeta` and `pack.png/psd`
 
-2. **Customise the build options by opening `Gulpfile.js` in your favourite text editor.** You'll see some variables at the top of the file - customise these to how you want your patch to be built and named:
+2. **Customise the build options by opening `patch.config.json` in your favourite text editor.** Customise to how you want your patch to be built and named:
     - **Set `patchName`** to whatever you'd like your generated .zip files to be named
     - **Set `initialSize`** to the resolution of your source images (default is 512)
     - **Set `resizeLevels`** to however many times you want the patch to be downsized
     - **Add to `resizeables`** any images you don't want resized
     - **Add to `thresholdables`** any images you need to keep their transparency
     - **Optional**: If you'd like to specify the location of your source images (and where they'll be generated), edit `paths.src/dest` - otherwise, leave as default.
+
+    Further example:
+    ```
+    // patch.config.json
+    {
+        // Set patch name - will be used to name .zip files.
+        // Alternatively, when calling 'gulp makeZips' on the command line, pass in the
+        // argument '--patchname MyPatchName' to override
+        "patchName": "NoPatchName",
+
+        // Initial size of source images - set this to the starting size of the patch
+        // E.g. if resizing a 128x patch, set to 128
+        "initialSize": 512,
+
+        // Set how many times the original patch should be downsized (inclusive)
+        // E.g. processing a 512x patch 5 times would produce: 512, 256, 128, 64, 32
+        "resizeLevels": 5,
+
+        // Prevent these files from being included in generated size packs:
+        "junkFiletypes": [
+            // Design files
+            "**/*.{ai,psb,psd}",
+            // Win/OSX system files
+            "**/*.{DS_Store,db}",
+        ],
+
+        // Resize these files:
+        "resizeables": [
+            // Everything, by default
+            "**/*.png",
+            // Then here, supply exceptions (i.e. everything, but NOT these).
+            // By default, don't resize GUIs (i.e. anything inside a gui/ or guis/ folder)
+            "!**/{gui,guis}/**/*.png",
+            // Add similar entries to the below to disable resizing for specific files, e.g.:
+            // "!**/blocks/someBlock.png",
+            // "!**/blocks/someOtherBlock.png",
+            // "!**/items/someItem.png",
+            // etc...
+        ],
+
+        // Apply threshold filter to (remove transparent pixels from) these files:
+        "thresholdables": [
+            "**/*.png",
+            // Add similar entries to the below to disable thresholding for specific files, e.g.:
+            // "!**/blocks/someBlock.png",
+            // "!**/blocks/someOtherBlock.png",
+            // "!**/items/someItem.png",
+            // etc...
+        ],
+
+        // Optimise these files using imagemin:
+        "compressables": [
+            "**/*.png",
+            // Add similar entries to the below to disable lossless image compression for specific files, e.g.:
+            // "!**/blocks/someBlock.png",
+            // "!**/blocks/someOtherBlock.png",
+            // "!**/items/someItem.png",
+            // etc...
+        ]
+    }
+    ```
 
 3. **Ready! You can now run any of the following from a terminal/command prompt within the folder:**
     - **`npm run optimise`** - generates size packs into `size-packs/`

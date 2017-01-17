@@ -1,0 +1,25 @@
+{
+    "patchName": "NoPatchName",
+    "initialSize": 512,
+    "resizeLevels": 5,
+    "junkFiletypes": [
+        "**/*.{ai,psb,psd}",
+        "**/*.{DS_Store,db}"
+    ],
+    "resizeables": [
+        "**/*.png",
+        "!**/{gui,guis}/**/*.png",
+        "!**/path/to/some/blocks/someBlock.png",
+        "!**/path/to/some/item/someItem.png"
+    ],
+    "thresholdables": [
+        "**/*.png",
+        "!**/path/to/some/blocks/someBlock.png",
+        "!**/path/to/some/item/someItem.png"
+    ],
+    "compressables": [
+        "**/*.png",
+        "!**/path/to/some/blocks/someBlock.png",
+        "!**/path/to/some/item/someItem.png"
+    ]
+}
