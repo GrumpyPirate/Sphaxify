@@ -10,7 +10,7 @@ const ignore = require('gulp-ignore');
 const newer = require('gulp-newer');
 const rename = require('gulp-rename');
 const zip = require('gulp-zip');
-const imageminOptipng = require('imagemin-optipng');
+const imagemin = require('gulp-imagemin');
 const MergeStream = require('merge-stream');
 const minimist = require('minimist');
 const nodeNotifier = require('node-notifier');
@@ -18,9 +18,10 @@ const path = require('path');
 
 const patchConfig = require('./patch.config.json');
 
-/* ------------------------------------------------------------------------------------------------
- ** Core logic below, only edit the below if you're brave/bored/interested
- ** --------------------------------------------------------------------------------------------- */
+/** ---------------------------------------------------------------------
+ * Core logic below, only edit the below if you're brave/bored/interested
+ * ------------------------------------------------------------------- */
+
 // Source/generated paths
 const paths = {
   // Source images/designs folder - source designs should be placed here
@@ -30,12 +31,12 @@ const paths = {
 };
 
 const imageminSettings = {
-  // Default is 2 (8 trials)
-  optimizationLevel: 4,
-  keepBitDepth: false,
-  keepColorType: true,
-  keepPalette: false,
-  keepIDAT: false,
+  optipng: {
+    optimizationLevel: 4,
+    bitDepthReduction: true,
+    colorTypeReduction: false,
+    paletteReduction: true,
+  },
 };
 const watchedFilesGlob = `${paths.src}/**/*.{png,mcmeta,txt}`;
 const patchSizeSuffix = 'x';
@@ -112,7 +113,9 @@ function ResizeStream(dirname, size) {
       .pipe(filterCompressables)
       // Measure file-by-file byte difference
       .pipe(bytediff.start())
-      .pipe(imageminOptipng(imageminSettings)())
+      .pipe(imagemin([
+        imagemin.optipng(imageminSettings.optipng),
+      ]))
       .pipe(bytediff.stop())
       .pipe(filterCompressables.restore)
       // Restore non-PNG files to stream
@@ -134,8 +137,7 @@ function ResizeStream(dirname, size) {
 function ZipStream(dirname, size) {
   // Intended zip name:
   // [dirname] [size] Sphax Patch - PATCH_CONFIG.patchName.zip
-  // i.e.: [1.6.4] [32x] Sphax Patch - NoPatchName.zip
-  // ---------------------------------------------------------------------------------------------
+  // e.g.: [1.6.4] [32x] Sphax Patch - NoPatchName.zip
   const packName = `${size}${patchSizeSuffix}`;
   const zipName = `[${dirname}] [${size}x] Sphax Patch - ${
     cliArgs.patchname || patchConfig.patchName
@@ -155,14 +157,10 @@ function ZipStream(dirname, size) {
   );
 }
 
-/* ------------------------------------------------------------------------------------------------
- ** TASKS
- ** --------------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------------------
- ** Task - makeZips
- ** --------------------------------------------------------------------------------------------- */
+/**
+ * Task - makeZips
+ */
 const makeZips = () => {
-  // Set up a new merge-stream instance
   const mergedStream = new MergeStream();
 
   // Get the first-level dirs inside PATHS.dest
@@ -170,7 +168,6 @@ const makeZips = () => {
 
   // For each dir (assume these are versions)
   destDirs.forEach((dir) => {
-    // And for every resize level
     targetTextureSizes.forEach((size) => {
       // Push a new resizeStream to mergedStream
       mergedStream.add(new ZipStream(dir, size));
@@ -189,7 +186,6 @@ const makeZips = () => {
  * Task - optimise
  */
 const optimise = () => {
-  // Set up a new merge-stream instance
   const mergedStream = new MergeStream();
 
   // Get the first-level dirs inside PATHS.src
@@ -197,7 +193,6 @@ const optimise = () => {
 
   // For each dir (assume these are versions)
   dirs.forEach((dir) => {
-    // And for every resize level
     targetTextureSizes.forEach((size) => {
       // Push a new resizeStream to mergedStream
       mergedStream.add(new ResizeStream(dir, size));
@@ -242,8 +237,6 @@ const watch = () => {
       '\n',
     );
 
-    // Watch Images
-    // -----------------------------------------------------------------------------------------
     gulp.watch(watchedFilesGlob, optimise);
   }
 };

@@ -21,11 +21,11 @@
     "gulp-filter": "^6.0.0",
     "gulp-gm": "0.0.9",
     "gulp-ignore": "^3.0.0",
+    "gulp-imagemin": "^7.1.0",
     "gulp-load-plugins": "^2.0.6",
     "gulp-newer": "^1.1.0",
     "gulp-rename": "^2.0.0",
     "gulp-zip": "^5.0.2",
-    "imagemin-optipng": "github:grumpypirate/imagemin-optipng",
     "merge-stream": "^2.0.0",
     "minimist": "^1.2.0",
     "node-notifier": "^9.0.0"
