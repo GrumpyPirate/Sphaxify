@@ -1,22 +1,23 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable no-console */
-const colors = require('ansi-colors');
-const fs = require('fs');
-const { series } = require('gulp');
-const gulp = require('gulp');
+import colors from 'ansi-colors';
+import fs from 'fs';
+import gulp, { series } from 'gulp';
+import filter from 'gulp-filter';
+import newer from 'gulp-newer';
+import rename from 'gulp-rename';
+import zip from 'gulp-zip';
+import imagemin from 'gulp-imagemin';
+import mergeStream from 'merge-stream';
+import minimist from 'minimist';
+import nodeNotifier from 'node-notifier';
+import path from 'path';
+
+import patchConfig from './patch.config.json';
+
 const bytediff = require('gulp-bytediff');
-const filter = require('gulp-filter');
 const gm = require('gulp-gm');
 const ignore = require('gulp-ignore');
-const newer = require('gulp-newer');
-const rename = require('gulp-rename');
-const zip = require('gulp-zip');
-const imagemin = require('gulp-imagemin');
-const MergeStream = require('merge-stream');
-const minimist = require('minimist');
-const nodeNotifier = require('node-notifier');
-const path = require('path');
-
-const patchConfig = require('./patch.config.json');
 
 /** ---------------------------------------------------------------------
  * Core logic below, only edit the below if you're brave/bored/interested
@@ -52,16 +53,18 @@ const cliArgs = minimist(process.argv.slice(2));
  * @param  {string} baseDir
  * @returns {string[]}
  */
-const getNonSelfDirs = (baseDir) => fs
-  .readdirSync(baseDir)
-  .reduce(
-    (accDirs, filename) => (fs.statSync(path.join(baseDir, filename)).isDirectory() && !filename.startsWith('.')
-      ? [...accDirs, filename]
-      : accDirs),
-    [],
-  );
+const getNonSelfDirs = (baseDir: string): string[] =>
+  fs
+    .readdirSync(baseDir)
+    .reduce<string[]>(
+      (accDirs, filename) =>
+        fs.statSync(path.join(baseDir, filename)).isDirectory() && !filename.startsWith('.')
+          ? [...accDirs, filename]
+          : accDirs,
+      [],
+    );
 
-function ResizeStream(dirname, size) {
+const createResizeStream = (dirname: string, size: number) => {
   const pctScale = `${(size / patchConfig.initialSize) * 100}%`; // 50%
   const packName = `${size}${patchSizeSuffix}`; // 256x
   const customDirname = path.join(dirname, packName); // 1.7.10/256x
@@ -89,33 +92,35 @@ function ResizeStream(dirname, size) {
       .pipe(filterResizeables)
       // Use gulp-gm to resize images
       .pipe(
-        gm((imageFile) => imageFile
-        // Ensure 8-bit RGB
-          .bitdepth(8)
-        // Bilinear
-        // .filter('Triangle')
-        // 'Bicubic' (Catmull-Rom)
-          .filter('Catrom')
-        // Resize to % scale
-          .resize(pctScale, '%')),
+        gm((imageFile: any) =>
+          imageFile
+            // Ensure 8-bit RGB
+            .bitdepth(8)
+            // Bilinear
+            // .filter('Triangle')
+            // 'Bicubic' (Catmull-Rom)
+            .filter('Catrom')
+            // Resize to % scale
+            .resize(pctScale, '%'),
+        ),
       )
       .pipe(filterResizeables.restore)
       // Use gulp-gm to  apply threshold to (remove partial transparency from) images
       // BUT - Apply only to images we want to remove transparency from
       .pipe(filterThresholdables)
       .pipe(
-        gm((imageFile) => imageFile
-        // Ensure no transparent edges on all PNGs
-          .operator('Opacity', 'Threshold', 50, '%')),
+        gm((imageFile: any) =>
+          imageFile
+            // Ensure no transparent edges on all PNGs
+            .operator('Opacity', 'Threshold', 50, '%'),
+        ),
       )
       .pipe(filterThresholdables.restore)
       // pass images registered in PATCH_CONFIG.compressables through imagemin
       .pipe(filterCompressables)
       // Measure file-by-file byte difference
       .pipe(bytediff.start())
-      .pipe(imagemin([
-        imagemin.optipng(imageminSettings.optipng),
-      ]))
+      .pipe(imagemin([imagemin.optipng(imageminSettings.optipng)]))
       .pipe(bytediff.stop())
       .pipe(filterCompressables.restore)
       // Restore non-PNG files to stream
@@ -132,9 +137,9 @@ function ResizeStream(dirname, size) {
         console.log(colors.magenta('Finished creating pack:'), colors.cyan(customDirname));
       })
   );
-}
+};
 
-function ZipStream(dirname, size) {
+const createZipStream = (dirname: string, size: number) => {
   // Intended zip name:
   // [dirname] [size] Sphax Patch - PATCH_CONFIG.patchName.zip
   // e.g.: [1.6.4] [32x] Sphax Patch - NoPatchName.zip
@@ -155,13 +160,13 @@ function ZipStream(dirname, size) {
         console.log(colors.magenta('Created zip:'), colors.green(zipName));
       })
   );
-}
+};
 
 /**
  * Task - makeZips
  */
 const makeZips = () => {
-  const mergedStream = new MergeStream();
+  const mergedStream = mergeStream();
 
   // Get the first-level dirs inside PATHS.dest
   const destDirs = getNonSelfDirs(paths.dest);
@@ -170,7 +175,7 @@ const makeZips = () => {
   destDirs.forEach((dir) => {
     targetTextureSizes.forEach((size) => {
       // Push a new resizeStream to mergedStream
-      mergedStream.add(new ZipStream(dir, size));
+      mergedStream.add(createZipStream(dir, size));
     });
   });
 
@@ -186,7 +191,7 @@ const makeZips = () => {
  * Task - optimise
  */
 const optimise = () => {
-  const mergedStream = new MergeStream();
+  const mergedStream = mergeStream();
 
   // Get the first-level dirs inside PATHS.src
   const dirs = getNonSelfDirs(paths.src);
@@ -195,7 +200,7 @@ const optimise = () => {
   dirs.forEach((dir) => {
     targetTextureSizes.forEach((size) => {
       // Push a new resizeStream to mergedStream
-      mergedStream.add(new ResizeStream(dir, size));
+      mergedStream.add(createResizeStream(dir, size));
     });
   });
 
