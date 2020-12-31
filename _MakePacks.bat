@@ -1,7 +1,10 @@
 @ECHO Generating size packs + zipping up...
 @ECHO.
 
-@CALL npm run makezips
+@CALL npm install
+@ECHO.
+
+@CALL npm run zip
 @ECHO.
 
 @ECHO Complete!
