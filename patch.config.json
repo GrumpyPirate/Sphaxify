@@ -1,9 +1,0 @@
-{
-  "patchName": "NoPatchName",
-  "initialSize": 512,
-  "resizeLevels": 5,
-  "junkFiletypes": ["**/*.{ai,psb,psd}", "**/*.{DS_Store,db}"],
-  "resizeables": ["**/*.png", "!**/{gui,guis}/**/*.png"],
-  "thresholdables": ["!**/*.png"],
-  "compressables": ["**/*.png"]
-}
