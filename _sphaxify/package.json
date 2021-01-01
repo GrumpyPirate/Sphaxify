@@ -16,6 +16,7 @@
   },
   "main": "gulpfile.js",
   "dependencies": {
+    "@iarna/toml": "^2.2.5",
     "ansi-colors": "^4.1.1",
     "gulp": "^4.0.2",
     "gulp-bytediff": "^1.0.0",

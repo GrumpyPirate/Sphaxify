@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
+import { notify } from 'node-notifier';
+import { Transform } from 'stream';
 import ansiColors from 'ansi-colors';
 import fs from 'fs';
 import gulp, { TaskFunction } from 'gulp';
@@ -9,24 +10,32 @@ import gulpRename from 'gulp-rename';
 import gulpZip from 'gulp-zip';
 import mergeStream from 'merge-stream';
 import minimist from 'minimist';
-import { notify } from 'node-notifier';
 import path from 'path';
 import rimraf from 'rimraf';
 import sharp from 'sharp';
-import { Transform } from 'stream';
+import toml from '@iarna/toml';
 import Vinyl, { BufferFile } from 'vinyl';
-
-import patchConfig from './patch.config';
 
 const gulpBytediff = require('gulp-bytediff');
 const gulpIgnore = require('gulp-ignore');
 
+const patchConfig = toml.parse(
+  fs.readFileSync(path.join(__dirname, '..', 'patch.config.toml'), 'utf-8'),
+) as {
+  patchName: string;
+  initialSize: number;
+  resizeLevels: number;
+  junkFiletypes: string[];
+  resizeables: string[];
+  thresholdables: string[];
+};
+
 // Source/generated paths
 const paths = {
   // Source images/designs folder - source designs should be placed here
-  src: 'source-designs',
+  src: path.join(__dirname, '..', 'source-designs'),
   // Destination for generated size packs
-  dest: 'size-packs',
+  dest: path.join(__dirname, '..', 'size-packs'),
 };
 
 const imageminSettings = {
@@ -69,8 +78,6 @@ const createResizeStream = (dirname: string, size: number): NodeJS.ReadWriteStre
 
   // Set up PNG-only file filter
   const filterPNG = gulpFilter('**/*.png', { restore: true });
-  // Optimise these files using OptiPNG
-  const filterCompressables = gulpFilter(patchConfig.compressables, { restore: true });
   // Resize these files
   const filterResizeables = gulpFilter(patchConfig.resizeables, { restore: true });
   // Apply threshold filter to (remove transparent pixels from) these files
@@ -160,13 +167,10 @@ const createResizeStream = (dirname: string, size: number): NodeJS.ReadWriteStre
         }),
       )
       .pipe(filterThresholdables.restore)
-      // Compress PNGs via imagemin
-      .pipe(filterCompressables)
       // Measure file-by-file byte difference
       .pipe(gulpBytediff.start())
       .pipe(gulpImagemin([gulpImagemin.optipng(imageminSettings.optipng)]))
       .pipe(gulpBytediff.stop())
-      .pipe(filterCompressables.restore)
       // Restore non-PNG files to stream
       .pipe(filterPNG.restore)
       .pipe(
