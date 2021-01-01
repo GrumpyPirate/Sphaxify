@@ -1,6 +1,9 @@
 @ECHO Generating size packs + zipping up...
 @ECHO.
 
+@CALL cd _sphaxify
+@ECHO.
+
 @CALL npm install
 @ECHO.
 
