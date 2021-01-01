@@ -1,27 +1,25 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-/* eslint-disable no-console */
-import colors from 'ansi-colors';
+import ansiColors from 'ansi-colors';
 import fs from 'fs';
-import gulp, { series } from 'gulp';
-import filter from 'gulp-filter';
-import newer from 'gulp-newer';
-import rename from 'gulp-rename';
-import zip from 'gulp-zip';
-import imagemin from 'gulp-imagemin';
+import gulp, { TaskFunction } from 'gulp';
+import gulpFilter from 'gulp-filter';
+import gulpImagemin from 'gulp-imagemin';
+import gulpNewer from 'gulp-newer';
+import gulpRename from 'gulp-rename';
+import gulpZip from 'gulp-zip';
 import mergeStream from 'merge-stream';
 import minimist from 'minimist';
-import nodeNotifier from 'node-notifier';
+import { notify } from 'node-notifier';
 import path from 'path';
+import rimraf from 'rimraf';
+import sharp from 'sharp';
+import { Transform } from 'stream';
+import Vinyl, { BufferFile } from 'vinyl';
 
-import patchConfig from './patch.config.json';
+import patchConfig from './patch.config';
 
-const bytediff = require('gulp-bytediff');
-const gm = require('gulp-gm');
-const ignore = require('gulp-ignore');
-
-/** ---------------------------------------------------------------------
- * Core logic below, only edit the below if you're brave/bored/interested
- * ------------------------------------------------------------------- */
+const gulpBytediff = require('gulp-bytediff');
+const gulpIgnore = require('gulp-ignore');
 
 // Source/generated paths
 const paths = {
@@ -39,7 +37,7 @@ const imageminSettings = {
     paletteReduction: true,
   },
 };
-const watchedFilesGlob = `${paths.src}/**/*.{png,mcmeta,txt}`;
+const watchedFilesGlob = `${paths.src}/**/*.{png,mcmeta,txt,json}`;
 const patchSizeSuffix = 'x';
 const targetTextureSizes = Array.from({ length: patchConfig.resizeLevels }).map(
   (_, i) => patchConfig.initialSize / 2 ** i,
@@ -64,69 +62,115 @@ const getNonSelfDirs = (baseDir: string): string[] =>
       [],
     );
 
-const createResizeStream = (dirname: string, size: number) => {
-  const pctScale = `${(size / patchConfig.initialSize) * 100}%`; // 50%
+const createResizeStream = (dirname: string, size: number): NodeJS.ReadWriteStream => {
+  const scale = size / patchConfig.initialSize; // e.g. 0.5, 0.25, 0.125, etc.
   const packName = `${size}${patchSizeSuffix}`; // 256x
   const customDirname = path.join(dirname, packName); // 1.7.10/256x
 
   // Set up PNG-only file filter
-  const filterPNG = filter('**/*.png', { restore: true });
+  const filterPNG = gulpFilter('**/*.png', { restore: true });
   // Optimise these files using OptiPNG
-  const filterCompressables = filter(patchConfig.compressables, { restore: true });
+  const filterCompressables = gulpFilter(patchConfig.compressables, { restore: true });
   // Resize these files
-  const filterResizeables = filter(patchConfig.resizeables, { restore: true });
+  const filterResizeables = gulpFilter(patchConfig.resizeables, { restore: true });
   // Apply threshold filter to (remove transparent pixels from) these files
-  const filterThresholdables = filter(patchConfig.thresholdables, { restore: true });
+  const filterThresholdables = gulpFilter(patchConfig.thresholdables, { restore: true });
 
   return (
     gulp
       // source everything
       .src(path.join(paths.src, dirname, '**'), { base: path.join(paths.src, dirname) })
       // Only pass through files newer than dest files
-      .pipe(newer(path.join(paths.dest, dirname, packName)))
+      .pipe(gulpNewer(path.join(paths.dest, dirname, packName)))
       // Filter out crap
-      .pipe(ignore(patchConfig.junkFiletypes))
+      .pipe(gulpIgnore(patchConfig.junkFiletypes))
       // Do the following steps to PNGs only( i.e. no .txt, .mcmeta files)
       .pipe(filterPNG)
       // Do the following to ONLY PATCH_CONFIG.resizeables
       .pipe(filterResizeables)
-      // Use gulp-gm to resize images
+      // Resize images
       .pipe(
-        gm((imageFile: any) =>
-          imageFile
-            // Ensure 8-bit RGB
-            .bitdepth(8)
-            // Bilinear
-            // .filter('Triangle')
-            // 'Bicubic' (Catmull-Rom)
-            .filter('Catrom')
-            // Resize to % scale
-            .resize(pctScale, '%'),
-        ),
+        new Transform({
+          objectMode: true,
+          transform: async (chunk: BufferFile, encoding, callback) => {
+            const origImage = sharp(chunk.contents);
+            const {
+              height = patchConfig.initialSize,
+              width = patchConfig.initialSize,
+            } = await origImage.clone().metadata();
+
+            callback(
+              null,
+              new Vinyl({
+                path: path.resolve(chunk.relative),
+                contents: await origImage
+                  .resize({
+                    width: width * scale,
+                    height: height * scale,
+                    kernel: sharp.kernel.cubic,
+                  })
+                  .png()
+                  .toBuffer(),
+              }),
+            );
+          },
+        }),
       )
       .pipe(filterResizeables.restore)
-      // Use gulp-gm to  apply threshold to (remove partial transparency from) images
-      // BUT - Apply only to images we want to remove transparency from
+      // Apply threshold to (remove partial transparency from) whitelisted images paths
       .pipe(filterThresholdables)
       .pipe(
-        gm((imageFile: any) =>
-          imageFile
-            // Ensure no transparent edges on all PNGs
-            .operator('Opacity', 'Threshold', 50, '%'),
-        ),
+        new Transform({
+          objectMode: true,
+          transform: async (chunk: BufferFile, encoding, callback) => {
+            const origImage = sharp(chunk.contents);
+            const { isOpaque } = await origImage.stats();
+
+            if (isOpaque) {
+              callback(null, chunk);
+            } else {
+              try {
+                // Extract the alpha channel, threshold it
+                const alphaChannel = await origImage
+                  .clone()
+                  .extractChannel('alpha')
+                  .toColourspace('b-w')
+                  .toBuffer();
+                const alphaChannelThresholded = await sharp(alphaChannel).threshold().toBuffer();
+
+                // Combine it with original image
+                const newImageWithoutAlpha = await origImage.removeAlpha().toBuffer();
+                const newImageWithAlpha = await sharp(newImageWithoutAlpha)
+                  .joinChannel(alphaChannelThresholded)
+                  .toBuffer();
+
+                callback(
+                  null,
+                  new Vinyl({
+                    path: path.resolve(chunk.relative),
+                    contents: newImageWithAlpha,
+                  }),
+                );
+              } catch (error) {
+                console.log('error:', error);
+                callback(error, chunk);
+              }
+            }
+          },
+        }),
       )
       .pipe(filterThresholdables.restore)
-      // pass images registered in PATCH_CONFIG.compressables through imagemin
+      // Compress PNGs via imagemin
       .pipe(filterCompressables)
       // Measure file-by-file byte difference
-      .pipe(bytediff.start())
-      .pipe(imagemin([imagemin.optipng(imageminSettings.optipng)]))
-      .pipe(bytediff.stop())
+      .pipe(gulpBytediff.start())
+      .pipe(gulpImagemin([gulpImagemin.optipng(imageminSettings.optipng)]))
+      .pipe(gulpBytediff.stop())
       .pipe(filterCompressables.restore)
       // Restore non-PNG files to stream
       .pipe(filterPNG.restore)
       .pipe(
-        rename((filePath) => ({
+        gulpRename((filePath) => ({
           ...filePath,
           dirname: path.join(customDirname, filePath.dirname),
         })),
@@ -134,53 +178,47 @@ const createResizeStream = (dirname: string, size: number) => {
       .pipe(gulp.dest(paths.dest))
       // Log when basic pack has been written
       .on('end', () => {
-        console.log(colors.magenta('Finished creating pack:'), colors.cyan(customDirname));
+        console.log(ansiColors.magenta('Finished creating pack:'), ansiColors.cyan(customDirname));
       })
   );
 };
 
-const createZipStream = (dirname: string, size: number) => {
+const createZipStream = (dirname: string, size: number): NodeJS.ReadWriteStream => {
   // Intended zip name:
-  // [dirname] [size] Sphax Patch - PATCH_CONFIG.patchName.zip
-  // e.g.: [1.6.4] [32x] Sphax Patch - NoPatchName.zip
+  // e.g.: SphaxPatch_MyTexturePack_MC1.16.4_64x.zip
   const packName = `${size}${patchSizeSuffix}`;
-  const zipName = `[${dirname}] [${size}x] Sphax Patch - ${
+  const zipName = `SphaxPatch_${
     cliArgs.patchname || patchConfig.patchName
-  }.zip`;
+  }_MC${dirname}_${packName}.zip`;
   const targetDir = path.join(paths.dest, dirname, packName);
 
   return (
     gulp
       .src(`${targetDir}/**`, { base: targetDir })
       // zip everything up
-      .pipe(zip(zipName))
+      .pipe(gulpZip(zipName))
       .pipe(gulp.dest(paths.dest))
       // Log when zip has been written
       .on('end', () => {
-        console.log(colors.magenta('Created zip:'), colors.green(zipName));
+        console.log(ansiColors.magenta('Created zip:'), ansiColors.green(zipName));
       })
   );
+};
+
+const clean: TaskFunction = (cb) => {
+  rimraf(paths.dest, cb);
 };
 
 /**
  * Task - makeZips
  */
 const makeZips = () => {
-  const mergedStream = mergeStream();
+  const streams = getNonSelfDirs(paths.dest).map((dir) =>
+    targetTextureSizes.map((size) => createZipStream(dir, size)),
+  );
 
-  // Get the first-level dirs inside PATHS.dest
-  const destDirs = getNonSelfDirs(paths.dest);
-
-  // For each dir (assume these are versions)
-  destDirs.forEach((dir) => {
-    targetTextureSizes.forEach((size) => {
-      // Push a new resizeStream to mergedStream
-      mergedStream.add(createZipStream(dir, size));
-    });
-  });
-
-  return mergedStream.on('end', () => {
-    nodeNotifier.notify({
+  return mergeStream(...streams).on('end', () => {
+    notify({
       title: `Sphax Patch - ${cliArgs.patchname || patchConfig.patchName}`,
       message: 'Finished making zips!',
     });
@@ -191,23 +229,12 @@ const makeZips = () => {
  * Task - optimise
  */
 const optimise = () => {
-  const mergedStream = mergeStream();
+  const streams = getNonSelfDirs(paths.src).map((dir) =>
+    targetTextureSizes.map((size) => createResizeStream(dir, size)),
+  );
 
-  // Get the first-level dirs inside PATHS.src
-  const dirs = getNonSelfDirs(paths.src);
-
-  // For each dir (assume these are versions)
-  dirs.forEach((dir) => {
-    targetTextureSizes.forEach((size) => {
-      // Push a new resizeStream to mergedStream
-      mergedStream.add(createResizeStream(dir, size));
-    });
-  });
-
-  // Return mergedStream, allows task to resolve once all async-added streams
-  // have collectively resolved
-  return mergedStream.on('end', () => {
-    nodeNotifier.notify({
+  return mergeStream(...streams).on('end', () => {
+    notify({
       title: `Sphax Patch - ${cliArgs.patchname || patchConfig.patchName}`,
       message: 'Finished generating size packs!',
     });
@@ -225,18 +252,18 @@ const watch = () => {
       '\n\n',
       '  No source files found to process.',
       '\n',
-      `  Make sure you've placed the folders you want to process inside the ${colors.yellow(
+      `  Make sure you've placed the folders you want to process inside the ${ansiColors.yellow(
         paths.src,
       )} directory.`,
     );
   } else {
     console.log(
       '\n',
-      colors.cyan('Watching for changes:\n'),
-      `  ${colors.green('Source files:')}`,
+      ansiColors.cyan('Watching for changes:\n'),
+      `  ${ansiColors.green('Source files:')}`,
       watchedFilesGlob,
       '\n\n',
-      `Size packs will be regenerated when any of these filetypes change within ${colors.yellow(
+      `Size packs will be regenerated when any of these filetypes change within ${ansiColors.yellow(
         `'${paths.src}'`,
       )}.`,
       '\n',
@@ -246,6 +273,7 @@ const watch = () => {
   }
 };
 
-module.exports.optimise = optimise;
-module.exports.makeZips = series(optimise, makeZips);
+module.exports.clean = clean;
+module.exports.optimise = gulp.series(optimise);
+module.exports.makeZips = gulp.series(optimise, makeZips);
 module.exports.watch = watch;

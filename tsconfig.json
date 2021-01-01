@@ -11,7 +11,6 @@
     /* Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', 'es2020', or 'ESNext'. */
     "module": "commonjs",
     /* Specify library files to be included in the compilation. */
-    // "lib": [],
     /* Allow javascript files to be compiled. */
     "allowJs": false,
     /* Report errors in .js files. */
@@ -83,7 +82,7 @@
     /* Specify module resolution strategy: 'node' (Node.js) or 'classic' (TypeScript pre-1.6). */
     // "moduleResolution": "node",
     /* Base directory to resolve non-absolute module names. */
-    "baseUrl": "./",
+    "baseUrl": ".",
     /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
     // "paths": {},
     /* List of root folders whose combined content represents the structure of the project at runtime. */
