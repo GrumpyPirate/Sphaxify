@@ -5,7 +5,8 @@ patchName = "MyTexturePack"
 
 # Initial size
 # ------------
-# The initial resolution of the source designs. E.g. for a set of source designs that are 128x128px, set this to 128.
+# The initial resolution of the source designs. E.g. for a set of source designs that are
+# 128x128px, set this to 128.
 initialSize = 512
 
 # Resize levels
@@ -32,12 +33,12 @@ resizeables = [
 
 # Thresholdables
 # --------------
-# Image path patterns to apply alpha thresholding to - or in other words, remove any transparency from
-# textures by forcing pixels' opacity to either 100% or 0. This is particularly useful for items, which
-# arguably look best with hard edges.
+# Image path patterns to apply alpha thresholding to - or in other words, remove any transparency
+# from textures by forcing pixels' opacity to either 100% or 0. This is particularly useful for
+# items, which arguably look best with hard edges.
 #
-# By default only items are thresholded, to prevent unintended side effects to other textures that often need to be translucent, like
-# fluids.
+# By default only items are thresholded, to prevent unintended side effects to other textures
+# that often need to be translucent, like fluids.
 #
 # To customise thresholding, add more patterns to this array. Some examples:
 #
@@ -58,12 +59,4 @@ resizeables = [
 # thresholdables: [],
 thresholdables = [
   "**/*item*/**/*.png",
-]
-
-# Compressables
-# -------------
-# Images to pass through lossless image compression. If you have issues with specific images as a result of
-# compression, then add them to this list.
-compressables = [
-  '**/*.png',
 ]

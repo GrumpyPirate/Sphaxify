@@ -28,7 +28,6 @@ const patchConfig = toml.parse(
   junkFiletypes: string[];
   resizeables: string[];
   thresholdables: string[];
-  compressables: string[];
 };
 
 // Source/generated paths
@@ -79,8 +78,6 @@ const createResizeStream = (dirname: string, size: number): NodeJS.ReadWriteStre
 
   // Set up PNG-only file filter
   const filterPNG = gulpFilter('**/*.png', { restore: true });
-  // Optimise these files using OptiPNG
-  const filterCompressables = gulpFilter(patchConfig.compressables, { restore: true });
   // Resize these files
   const filterResizeables = gulpFilter(patchConfig.resizeables, { restore: true });
   // Apply threshold filter to (remove transparent pixels from) these files
@@ -170,13 +167,10 @@ const createResizeStream = (dirname: string, size: number): NodeJS.ReadWriteStre
         }),
       )
       .pipe(filterThresholdables.restore)
-      // Compress PNGs via imagemin
-      .pipe(filterCompressables)
       // Measure file-by-file byte difference
       .pipe(gulpBytediff.start())
       .pipe(gulpImagemin([gulpImagemin.optipng(imageminSettings.optipng)]))
       .pipe(gulpBytediff.stop())
-      .pipe(filterCompressables.restore)
       // Restore non-PNG files to stream
       .pipe(filterPNG.restore)
       .pipe(
